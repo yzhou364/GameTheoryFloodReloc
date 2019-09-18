@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 import math
 
 ### Input flood probability csv file
@@ -45,7 +45,7 @@ def subNeeded(movCost,resExLoss,threshold):
 	#print(tmp)
 	return tmp
 
-### FixBenefit 
+### FixBenefit
 def fixBene(movCost,resExLoss,dis_res,threshold):
 	tmp = movCost - np.array(resExLoss)
 	#print(len(resExLoss))
@@ -68,7 +68,7 @@ def subObjCal(subNeeded,govExLoss,dis_gov,calLength):
 		tmp.append(govExLoss[i] + tmp1[i])
 	#print(tmp)
 	return tmp
-	
+
 
 def fixObjCal(fixBene,govExLoss,dis_gov,calLength):
 	tmp = []
@@ -81,7 +81,7 @@ def fixObjCal(fixBene,govExLoss,dis_gov,calLength):
 	#print(tmp)
 	return tmp
 
-### run models 
+### run models
 def runModel(prob,calLength,loss,dis_gov,dis_res,movCost):
 	expLoss = np.array(prob)*loss
 	#print(expLoss)
@@ -98,7 +98,7 @@ def runModel(prob,calLength,loss,dis_gov,dis_res,movCost):
 	#print(sub_Obj)
 	fixB_Obj = fixObjCal(fixB_Need,gov_Loss,dis_gov,calLength)
 	#print(fixB_Obj)
-	
+
 	#print(sub_Need)
 	for i in range(0,calLength):
 		if sub_Need[i] == 0:
@@ -116,3 +116,4 @@ def runModel(prob,calLength,loss,dis_gov,dis_res,movCost):
 	tmp = []
 	tmp.append([self_Moving,sub_year,sub_value,fixB_year,fixB_value,dis_gov,dis_res,movCost])
 	return tmp
+test test
