@@ -1,5 +1,13 @@
 extensions [csv]
 
+;; reading house infomation
+;; locate and show the house in the board
+;; calculate inundation level
+;; run the analysis (two type)
+;; plot the moving numbers
+;; trying to add government behaviour
+
+
 globals [
   TIME
   TOTAL
