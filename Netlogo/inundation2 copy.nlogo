@@ -1,18 +1,15 @@
-extensions [
-csv
- gis
-]
+extensions [csv gis]
 
 globals[
-  cities-dataset
-  Flood_Height
+  GEODATASET
+  FLOOD_HEIGHT
   MHHW
   MSL
   TIME
   TOTAL
   PROB_LIST
   SUBSIDY_PV
-  CLASS ;; number of studied class
+  CLASS
 ]
 
 turtles-own[
@@ -26,10 +23,10 @@ turtles-own[
   Sq.ft.
   Inundation
   Cost_to_personal_property
-  future_loss
-  future_benefit
-  damage_pct
-  moved?
+  Future_loss
+  Future_benefit
+  Damage_pct
+  Moved?
 ]
 
 ;; set different breed
@@ -44,17 +41,14 @@ to setup
   Input_flood_data ;; input data from data.csv
   Update_coefficient_TOTAL  ;; update values and coefficient in each tick
   Update_coefficient_SUBSIDY_PV
-
-  house_property
-
+  set FLOOD_HEIGHT Flood_Height_Meters
+  set MHHW MHHW_Meters
+  set MSL MSL_Meters
   set TIME 0
-
-  set cities-dataset gis:load-dataset "test.shp"
-
+  set GEODATASET gis:load-dataset "data/test.shp"
   ; Set the world envelope to the union of all of our dataset's envelopes
-  gis:set-world-envelope (gis:envelope-union-of (gis:envelope-of cities-dataset))
-  reset-ticks
-
+  gis:set-world-envelope (gis:envelope-union-of (gis:envelope-of GEODATASET))
+  House_property
   reset-ticks
 end
 
@@ -71,46 +65,30 @@ to Go
     Update_values   ;; update values for every agent
     Change_color ;; change color if agents have moved in this year
   ]
-
   set TIME TIME + 1 ;; add time
-
   tick
 end
 
-to house_property
-  set Flood_Height Flood_Height_Meters
-  set MHHW MHHW_Meters
-  set MSL MSL_Meters
+to House_property
+  foreach gis:feature-list-of GEODATASET [ vector-feature ->
+    show vector-feature
+    let loc gis:location-of(first(first (gis:vertex-lists-of vector-feature)))
+    if not empty? loc[
+      create-turtles 1[
+      set xcor item 0 loc
+      set ycor item 1 loc
+      set size 10
+      set shape "house"
+      set TotalMarketValue gis:property-value vector-feature "MARKETVALU"
+      set StructureValue 100
+      set moved? False
 
-  file-close-all
-  if Location = "NY" [ file-open "three.csv"] ;;open format for other city file
-  let i 0
-  while [not file-at-end?]
-  [
-    let data csv:from-row file-read-line
-    ;; Here needs csv data with category at column (item i) + 1////
-    create-turtles 1
-    [
-      set Latitude item 2 data
-      set Longtitude item 3 data
-      set Elevation item 4 data
-      set Stories item 8 data
-      set TotalMarketValue item 15 data
-      set StructureValue item 14 data           ;;need info about sq.ft. and basement in the data
-      set Inundation ceiling((Flood_Height - MHHW - MSL - Elevation) * 39.3701) ;;conversion of altitude (m) to inches
-       if Inundation < 0
-       [ set Inundation 0 ]
-      inundation_damage_cost
-      setting_agents
-      set xcor item 3 data
-      set ycor item 2 data
-      set i i + 1
+      ]
     ]
   ]
-  file-close
 end
 
-to inundation_damage_cost
+to Inundation_damage_cost
   if Inundation <= 2
   [ set Cost_to_personal_property 3172]
   if Inundation > 2 and Inundation <= 3
@@ -142,7 +120,7 @@ to inundation_damage_cost
 
 end
 
-to setting_agents
+to Setting_agents
   ifelse TotalMarketValue >= 3000 [
     set breed normals
     set shape "triangle"
@@ -166,7 +144,7 @@ to setting_agents
   ]
 end
 
-to damage_percentage
+to Damage_percentage
   if Inundation <= 0
   [set damage_pct 0.255]
   if Inundation > 0 and Inundation <= 1
@@ -308,7 +286,7 @@ to Input_flood_data
 
   file-close
   if Flood_type = "100_year_NY" [
-    file-open "100_year_NY.csv"
+    file-open "data/100_NY_4.5.csv"
   ]
   let iter 0
   loop [
@@ -339,26 +317,26 @@ to Initialize_list
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-365
-102
-703
-441
+535
+20
+1144
+630
 -1
 -1
-10.0
+1.0
 1
 10
 1
 1
 1
 0
-1
-1
-1
--32
 0
 0
-32
+1
+-600
+0
+0
+600
 0
 0
 1
@@ -470,8 +448,8 @@ SLIDER
 280
 312
 313
-normal_dis
-normal_dis
+Normal_dis
+Normal_dis
 0
 1
 0.0
@@ -481,12 +459,12 @@ NIL
 HORIZONTAL
 
 SLIDER
-184
-327
-356
-360
-poor_dis
-poor_dis
+185
+330
+357
+363
+Poor_dis
+Poor_dis
 0
 1
 0.0
@@ -552,10 +530,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-120
-23
-183
-56
+91
+14
+154
+47
 NIL
 Go
 T
@@ -579,10 +557,10 @@ Flood_type
 0
 
 PLOT
-192
-453
-386
-603
+8
+471
+202
+621
 Number of moved
 Time
 Number
@@ -938,7 +916,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
