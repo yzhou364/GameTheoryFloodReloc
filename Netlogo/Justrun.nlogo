@@ -6,9 +6,9 @@ globals[
   MHHW
   MSL
   TIME
-  TOTAL
+  TOTAL  ;; Total future loss
   PROB_LIST
-  SUBSIDY_PV
+  SUBSIDY_PV ;; The present value of given subsidy
   CLASS
 ]
 
@@ -29,8 +29,8 @@ turtles-own[
   Moved?
 ]
 
-;; set different breed
-;; poor / normal income people have different discount rate
+;; Set different breed
+;; Poor / normal income people have different discount rate
 breed [ poors poor ]
 breed [ normals normal ]
 
@@ -41,9 +41,9 @@ end
 to setup
   clear-all
 
-  Initialize_list ;; initilize lists
-  Input_flood_data ;; input data from data.csv
-  Update_coefficient_TOTAL  ;; update values and coefficient in each tick
+  Initialize_list ;; Initilize lists
+  Input_flood_data ;; Input data from data.csv
+  Update_coefficient_TOTAL  ;; Update values and coefficient in each tick
   Update_coefficient_SUBSIDY_PV
   set FLOOD_HEIGHT Flood_Height_Meters
   set MHHW MHHW_Meters
@@ -144,9 +144,8 @@ to Setting_agents
     set color red
   ]
   set moved? false
-  Damage_pct_conditions           ;; set random valse for damage percentage
+  Damage_pct_conditions
                                   ;; set expected loss for the future standing at year one and update at every tick
-                                  ;; future loss is set as total coefficient * property value * damage percentage
   if breed = normals
   [
     set future_loss ( item 0 TOTAL) * Moving_Cost_Multiplier * Total_market_value * damage_pct
@@ -286,8 +285,8 @@ to Update_coefficient_TOTAL
     loop [
       if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
                                           ;; set different cumulative future loss
-      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set TOTAL replace-item 1 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + poor_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
       set iter iter + 1
       ;;show TOTAL  ;; show to check calculation
     ]
@@ -297,8 +296,8 @@ to Update_coefficient_TOTAL
     loop [
       if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
                                           ;; set different cumulative future loss
-      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + normal_dis + Hyperbolic_rate * iter ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set TOTAL replace-item 1 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + poor_dis + Hyperbolic_rate * iter  ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis + Hyperbolic_rate * iter ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis + Hyperbolic_rate * iter  ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
       set iter iter + 1
       ;;show TOTAL  ;; show to check calculation
     ]
@@ -306,22 +305,23 @@ to Update_coefficient_TOTAL
 end
 
 ;; function to update one-time subsidy
+             ;; Something wrong with future loss
 to Update_coefficient_SUBSIDY_PV
 
   ;; update subsidy's pv according to time
-  set SUBSIDY_PV replace-item 0 SUBSIDY_PV ( Subsidy / ( 1 + normal_dis ) ^ TIME )
-  set SUBSIDY_PV replace-item 1 SUBSIDY_PV ( Subsidy / ( 1 + poor_dis ) ^ TIME )
+  set SUBSIDY_PV replace-item 0 SUBSIDY_PV ( Subsidy / ( 1 + Normal_dis ) ^ TIME )
+  set SUBSIDY_PV replace-item 1 SUBSIDY_PV ( Subsidy / ( 1 + Poor_dis ) ^ TIME )
 
   ;;show SUBSIDY_PV
 
 end
 
-;; function to update values for agent
+;; Function to update values for agent
 to Update_values
 
   if breed = normals
   [
-    set future_loss ( item 0 TOTAL)  * Total_market_value * damage_pct
+    set Future_loss ( item 0 TOTAL)  *   Structure_Value * Damage_pct
     if Government_strategy = "Fixed-Benefit" [
       let iter 0
       loop [
@@ -334,7 +334,7 @@ to Update_values
   ]
   if breed = poors
   [
-    set future_loss ( item 1 TOTAL)  * Total_market_value * damage_pct
+    set future_loss ( item 1 TOTAL)  *   Structure_Value * Damage_pct
     if Government_strategy = "Fixed-Benefit" [
       let iter 0
       loop [
@@ -370,7 +370,7 @@ to Change_color
   if breed = poors
   [
     ifelse Government_strategy = "One-time-Subsidy" [
-      if Total_market_value - ( item 1 SUBSIDY_PV)- future_loss <= threshold [
+      if Total_market_value * Moving_Cost_Multiplier - ( item 1 SUBSIDY_PV)- future_loss <= threshold [
         set color blue  ;; change color to red if moved
         set moved? True ;; resident has moved
       ]
@@ -397,8 +397,6 @@ to Input_flood_data
   let iter 0
   loop [
     ifelse file-at-end? [
-      ;; show iter
-      ;; show PROB_LIST
       stop ]
     [
       set PROB_LIST lput file-read PROB_LIST
@@ -423,13 +421,13 @@ to Initialize_list
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-717
+689
 10
-1225
-519
+1291
+613
 -1
 -1
-0.5
+0.18
 1
 10
 1
@@ -500,10 +498,10 @@ MSL_Meters
 Number
 
 CHOOSER
-140
-83
-278
-128
+379
+10
+517
+55
 Location
 Location
 "NY"
@@ -599,7 +597,7 @@ Hyperbolic_rate
 Hyperbolic_rate
 0
 1
-0.1
+0.0
 0.01
 1
 NIL
@@ -614,7 +612,7 @@ Subsidy
 Subsidy
 0
 10000
-6600.0
+2200.0
 100
 1
 NIL
@@ -653,10 +651,10 @@ NIL
 1
 
 CHOOSER
-316
-36
-454
-81
+528
+11
+666
+56
 Flood_type
 Flood_type
 "100_year_NY"
@@ -673,7 +671,7 @@ Number
 0.0
 100.0
 0.0
-100.0
+10000.0
 true
 false
 "" ""
@@ -681,10 +679,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles with [moved?]"
 
 BUTTON
-347
-120
-411
-153
+170
+14
+234
+47
 NIL
 Clear
 NIL
@@ -703,7 +701,7 @@ INPUTBOX
 539
 244
 House_Price_Cutoff
-500000.0
+389000.0
 1
 0
 Number
@@ -714,10 +712,46 @@ INPUTBOX
 543
 326
 Moving_Cost_Multiplier
-1.0
+2.0
 1
 0
 Number
+
+PLOT
+225
+472
+425
+622
+ Normal move pct
+Time
+Pct
+0.0
+100.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count normals with[moved?] / count normals"
+
+PLOT
+446
+476
+651
+626
+Low_income move pct
+Time
+Pct
+0.0
+100.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count poors with[moved?] / count poors"
 
 @#$#@#$#@
 ## WHAT IS IT?
