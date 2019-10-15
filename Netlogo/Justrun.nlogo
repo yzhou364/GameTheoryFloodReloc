@@ -148,11 +148,11 @@ to Setting_agents
                                   ;; set expected loss for the future standing at year one and update at every tick
   if breed = normals
   [
-    set future_loss ( item 0 TOTAL) * Moving_Cost_Multiplier * Total_market_value * damage_pct
+    set Future_loss ( item 0 TOTAL) * Structure_Value * Damage_pct
   ]
   if breed = poors
   [
-    set future_loss ( item 1 TOTAL) * Moving_Cost_Multiplier * Total_market_value * damage_pct
+    set Future_loss ( item 1 TOTAL) * Structure_Value * Damage_pct
   ]
 end
 
@@ -170,110 +170,110 @@ end
 
 to Damage_percentage_onestory_basement
   if Inundation <= 0
-  [set damage_pct 0.255]
+  [set Damage_pct 0.255]
   if Inundation > 0 and Inundation <= 1
-  [set damage_pct 0.32]
+  [set Damage_pct 0.32]
   if Inundation > 1 and Inundation <= 2
-  [set damage_pct 0.387]
+  [set Damage_pct 0.387]
   if Inundation > 2 and Inundation <= 3
-  [set damage_pct 0.455]
+  [set Damage_pct 0.455]
   if Inundation > 3 and Inundation <= 4
-  [set damage_pct 0.522]
+  [set Damage_pct 0.522]
   if Inundation > 4 and Inundation <= 5
-  [set damage_pct 0.586]
+  [set Damage_pct 0.586]
   if Inundation > 5 and Inundation <= 6
-  [set damage_pct 0.645]
+  [set Damage_pct 0.645]
   if Inundation > 6 and Inundation <= 7
-  [set damage_pct 0.698]
+  [set Damage_pct 0.698]
   if Inundation > 7 and Inundation <= 8
-  [set damage_pct 0.742]
+  [set Damage_pct 0.742]
   if Inundation > 8 and Inundation <= 9
-  [set damage_pct 0.777]
+  [set Damage_pct 0.777]
   if Inundation > 9 and Inundation <= 10
-  [set damage_pct 0.801]
+  [set Damage_pct 0.801]
   if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
-  [set damage_pct 0.811]
+  [set Damage_pct 0.811]
 end
 
 to Damage_percentage_morethanonestory_basement
   if Inundation <= 0
-  [set damage_pct 0.179]
+  [set Damage_pct 0.179]
   if Inundation > 0 and Inundation <= 1
-  [set damage_pct 0.223]
+  [set Damage_pct 0.223]
   if Inundation > 1 and Inundation <= 2
-  [set damage_pct 0.270]
+  [set Damage_pct 0.270]
   if Inundation > 2 and Inundation <= 3
-  [set damage_pct 0.319]
+  [set Damage_pct 0.319]
   if Inundation > 3 and Inundation <= 4
-  [set damage_pct 0.369]
+  [set Damage_pct 0.369]
   if Inundation > 4 and Inundation <= 5
-  [set damage_pct 0.419]
+  [set Damage_pct 0.419]
   if Inundation > 5 and Inundation <= 6
-  [set damage_pct 0.469]
+  [set Damage_pct 0.469]
   if Inundation > 6 and Inundation <= 7
-  [set damage_pct 0.518]
+  [set Damage_pct 0.518]
   if Inundation > 7 and Inundation <= 8
-  [set damage_pct 0.564]
+  [set Damage_pct 0.564]
   if Inundation > 8 and Inundation <= 9
-  [set damage_pct 0.608]
+  [set Damage_pct 0.608]
   if Inundation > 9 and Inundation <= 10
-  [set damage_pct 0.648]
+  [set Damage_pct 0.648]
   if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
-  [set damage_pct 0.684]
+  [set Damage_pct 0.684]
 end
 
 to Damage_percentage_onestory_nobasement
   if Inundation <= 0
-  [set damage_pct 0.134]
+  [set Damage_pct 0.134]
   if Inundation > 0 and Inundation <= 1
-  [set damage_pct 0.233]
+  [set Damage_pct 0.233]
   if Inundation > 1 and Inundation <= 2
-  [set damage_pct 0.321]
+  [set Damage_pct 0.321]
   if Inundation > 2 and Inundation <= 3
-  [set damage_pct 0.401]
+  [set Damage_pct 0.401]
   if Inundation > 3 and Inundation <= 4
-  [set damage_pct 0.471]
+  [set Damage_pct 0.471]
   if Inundation > 4 and Inundation <= 5
-  [set damage_pct 0.532]
+  [set Damage_pct 0.532]
   if Inundation > 5 and Inundation <= 6
-  [set damage_pct 0.586]
+  [set Damage_pct 0.586]
   if Inundation > 6 and Inundation <= 7
-  [set damage_pct 0.632]
+  [set Damage_pct 0.632]
   if Inundation > 7 and Inundation <= 8
-  [set damage_pct 0.672]
+  [set Damage_pct 0.672]
   if Inundation > 8 and Inundation <= 9
-  [set damage_pct 0.705]
+  [set Damage_pct 0.705]
   if Inundation > 9 and Inundation <= 10
-  [set damage_pct 0.732]
+  [set Damage_pct 0.732]
   if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
-  [set damage_pct 0.754]
+  [set Damage_pct 0.754]
 end
 
 to Damage_percentage_morethanonestory_nobasement
   if Inundation <= 0
-  [set damage_pct 0.093]
+  [set Damage_pct 0.093]
   if Inundation > 0 and Inundation <= 1
-  [set damage_pct 0.152]
+  [set Damage_pct 0.152]
   if Inundation > 1 and Inundation <= 2
-  [set damage_pct 0.209]
+  [set Damage_pct 0.209]
   if Inundation > 2 and Inundation <= 3
-  [set damage_pct 0.263]
+  [set Damage_pct 0.263]
   if Inundation > 3 and Inundation <= 4
-  [set damage_pct 0.314]
+  [set Damage_pct 0.314]
   if Inundation > 4 and Inundation <= 5
-  [set damage_pct 0.362]
+  [set Damage_pct 0.362]
   if Inundation > 5 and Inundation <= 6
-  [set damage_pct 0.407]
+  [set Damage_pct 0.407]
   if Inundation > 6 and Inundation <= 7
-  [set damage_pct 0.449]
+  [set Damage_pct 0.449]
   if Inundation > 7 and Inundation <= 8
-  [set damage_pct 0.488]
+  [set Damage_pct 0.488]
   if Inundation > 8 and Inundation <= 9
-  [set damage_pct 0.524]
+  [set Damage_pct 0.524]
   if Inundation > 9 and Inundation <= 10
-  [set damage_pct 0.557]
+  [set Damage_pct 0.557]
   if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
-  [set damage_pct 0.587]
+  [set Damage_pct 0.587]
 end
 
 to Update_coefficient_TOTAL
@@ -376,7 +376,7 @@ to Change_color
       ]
     ]
     [
-      if Total_market_value  * Moving_Cost_Multiplier - future_benefit - future_loss <= threshold [
+      if Total_market_value  * Moving_Cost_Multiplier - Future_benefit - Future_loss <= threshold [
         set color blue  ;; change color to red if moved
         set moved? True ;; resident has moved
       ]
@@ -391,7 +391,7 @@ to Input_flood_data
   set PROB_LIST [ ]
 
   file-close
-  if Flood_type = "100_year_NY" [
+  if Flood_type = "100_year" [
     file-open "data/100_NY_4.5.csv"
   ]
   let iter 0
@@ -423,11 +423,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1291
-613
+1193
+515
 -1
 -1
-0.18
+0.05
 1
 10
 1
@@ -657,7 +657,7 @@ CHOOSER
 56
 Flood_type
 Flood_type
-"100_year_NY"
+"100_year" "10_year" "Multiple"
 0
 
 PLOT
@@ -671,12 +671,13 @@ Number
 0.0
 100.0
 0.0
-10000.0
+100.0
 true
 false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles with [moved?]"
+"pen-1" 1.0 0 -7500403 true "" "show count turtles with [moved?]"
 
 BUTTON
 170
@@ -712,7 +713,7 @@ INPUTBOX
 543
 326
 Moving_Cost_Multiplier
-2.0
+4.0
 1
 0
 Number
