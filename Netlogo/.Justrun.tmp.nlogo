@@ -10,7 +10,7 @@ globals[
   PROB_LIST
   SUBSIDY_PV ;; The present value of given subsidy
   CLASS
-  OBJECTIVE ;; The global objective function
+
 ]
 
 turtles-own[
