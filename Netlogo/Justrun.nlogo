@@ -91,7 +91,8 @@ to House_property
       set Total_market_value gis:property-value vector-feature "TOTALMARKE"
       set Structure_value gis:property-value vector-feature "IMPROVEMEN"
       set Sq.ft. gis:property-value vector-feature "SQUAREFEET"
-      set size 5
+      set size 8
+      set color (5 + floor (gis:property-value vector-feature "TOTALMARKE" / 200000 ) * 10)
       set Inundation ceiling((Flood_Height - MHHW - MSL - Elevation) * 39.3701)
        if Inundation < 0
         [ set Inundation 0 ]
@@ -138,11 +139,11 @@ to Setting_agents
   ifelse Total_market_value >= House_Price_Cutoff [
     set breed normals
     set shape "triangle"
-    set color green
+    ;set color green
   ]
   [ set breed poors
     set shape "circle"
-    set color red
+    ;set color red
   ]
   set moved? false
   Damage_pct_conditions
@@ -352,36 +353,27 @@ to Update_values
 end
 to Change_color
 
-  ;; if moving cost plus pv of subsidy is greater than future loss then residents will move
-  if breed = normals
-  [
-    ifelse Government_strategy = "One-time-Subsidy" [
-      if Total_market_value  * Moving_Cost_Multiplier - ( item 0 SUBSIDY_PV)- future_loss <= threshold [
-        set color blue  ;; change color to red if moved
+  if breed = normals[
+    if Government_strategy = "One-time-Subsidy" [
+      if Total_market_value  * Moving_Cost_Multiplier - ( item 0 SUBSIDY_PV)- Future_loss <= threshold [
+        if moved? = False [
+        set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
+        ]
       ]
     ]
-    [
-      if Total_market_value  * Moving_Cost_Multiplier - future_benefit - future_loss <= threshold [
-        set color blue  ;; change color to red if moved
-        set moved? True ;; resident has moved
-      ]
-    ]
+
   ]
-  if breed = poors
-  [
-    ifelse Government_strategy = "One-time-Subsidy" [
-      if Total_market_value * Moving_Cost_Multiplier - ( item 1 SUBSIDY_PV)- future_loss <= threshold [
-        set color blue  ;; change color to red if moved
+  if breed = poors[
+    if Government_strategy = "One-time-Subsidy" [
+      if Total_market_value * Moving_Cost_Multiplier - ( item 1 SUBSIDY_PV)- Future_loss <= threshold [
+        if moved? = False [
+        set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
+        ]
       ]
     ]
-    [
-      if Total_market_value  * Moving_Cost_Multiplier - Future_benefit - Future_loss <= threshold [
-        set color blue  ;; change color to red if moved
-        set moved? True ;; resident has moved
-      ]
-    ]
+
   ]
 
 end
@@ -424,11 +416,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1690
-1020
+1197
+519
 -1
 -1
-0.05
+0.5
 1
 10
 1
@@ -542,7 +534,7 @@ Fix_benefit
 Fix_benefit
 0
 10000
-0.0
+83.0
 1
 1
 NIL
@@ -612,8 +604,8 @@ SLIDER
 Subsidy
 Subsidy
 0
-10000
-2200.0
+1000000
+796200.0
 100
 1
 NIL
@@ -709,12 +701,12 @@ House_Price_Cutoff
 Number
 
 INPUTBOX
-394
-266
-543
-326
+390
+254
+540
+314
 Moving_Cost_Multiplier
-4.0
+3.0
 1
 0
 Number

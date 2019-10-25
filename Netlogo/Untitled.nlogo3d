@@ -85,7 +85,7 @@ to House_property
       create-turtles 1[
       set xcor item 0 loc
       set ycor item 1 loc
-      set zcor gis:property-value vector-feature "ALTITUDE__"
+      set zcor gis:property-value vector-feature "ALTITUDE__" * 2
       set Latitude gis:property-value vector-feature "LATITUDE"
       set Longitude gis:property-value vector-feature "LONGITUDE"
       set Elevation gis:property-value vector-feature "ALTITUDE__"
@@ -488,10 +488,10 @@ ticks
 30.0
 
 BUTTON
-75
-140
-141
-173
+518
+289
+584
+322
 NIL
 Setup\n
 NIL
@@ -505,10 +505,10 @@ NIL
 1
 
 BUTTON
-69
-212
-133
-245
+518
+336
+582
+369
 NIL
 Clear\n
 NIL
@@ -522,10 +522,10 @@ NIL
 1
 
 INPUTBOX
-270
-192
-419
-252
+29
+265
+178
+325
 Flood_Height_Meters
 1.84
 1
@@ -533,10 +533,10 @@ Flood_Height_Meters
 Number
 
 INPUTBOX
-282
-359
-431
-419
+190
+265
+339
+325
 MHHW_Meters
 2.543
 1
@@ -544,10 +544,10 @@ MHHW_Meters
 Number
 
 INPUTBOX
-298
-120
-447
-180
+28
+196
+177
+256
 MSL_Meters
 1.785
 1
@@ -555,10 +555,10 @@ MSL_Meters
 Number
 
 INPUTBOX
-351
-47
-500
-107
+26
+119
+175
+179
 House_Price_Cutoff
 3890003.0
 1
@@ -566,10 +566,10 @@ House_Price_Cutoff
 Number
 
 SLIDER
-43
-281
-195
-314
+19
+340
+192
+373
 Normal_dis
 Normal_dis
 0
@@ -596,20 +596,20 @@ NIL
 HORIZONTAL
 
 CHOOSER
-117
-46
-255
-91
+24
+61
+162
+106
 Hyperbolic?
 Hyperbolic?
 "On" "Off"
 0
 
 INPUTBOX
-227
-284
-376
-344
+190
+199
+339
+259
 Hyperbolic_rate
 0.01
 1
@@ -617,10 +617,10 @@ Hyperbolic_rate
 Number
 
 SLIDER
-103
-13
-275
-46
+19
+15
+191
+48
 Period
 Period
 0
@@ -632,10 +632,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-486
-383
-658
-416
+381
+25
+553
+58
 Subsidy
 Subsidy
 0
@@ -647,20 +647,20 @@ NIL
 HORIZONTAL
 
 CHOOSER
-460
-325
-625
-370
+378
+137
+543
+182
 Government_Strategy
 Government_Strategy
 "One-time Subsidy"
 0
 
 SLIDER
-422
-251
-594
-284
+406
+74
+578
+107
 Fix_benefit
 Fix_benefit
 0
@@ -672,10 +672,10 @@ NIL
 HORIZONTAL
 
 INPUTBOX
-513
-187
-662
-247
+185
+120
+334
+180
 Moving_Cost_Multiplier
 4.0
 1
@@ -683,10 +683,10 @@ Moving_Cost_Multiplier
 Number
 
 SLIDER
-515
-128
-687
-161
+219
+75
+391
+108
 Threshold
 Threshold
 0
@@ -698,20 +698,20 @@ NIL
 HORIZONTAL
 
 CHOOSER
-536
-86
-674
-131
+219
+10
+357
+55
 Flood_type
 Flood_type
 "100_year"
 0
 
 BUTTON
-201
-228
-264
-261
+519
+380
+582
+413
 NIL
 Go
 T

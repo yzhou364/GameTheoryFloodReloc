@@ -2,19 +2,20 @@ extensions [csv gis]
 
 globals[
   GEODATASET
-  FLOOD_HEIGHT
+  FLOOD_HEIGHT_10Y
+  FLOOD_HEIGHT_100Y
   MHHW
   MSL
   TIME
   TOTAL  ;; Total future loss
+  PROB_10Y_LIST
+  PROB_100Y_LIST
   PROB_LIST
   PAST_LOSS
   SUBSIDY_PV ;; The present value of given subsidy
   CLASS
   OBJECTIVE ;; The global objective function
 ]
-
-
 turtles-own[
   Latitude
   Longitude
@@ -24,31 +25,33 @@ turtles-own[
   Total_market_value
   Structure_Value
   Sq.ft.
-  Inundation
-  Cost_to_personal_property
+  Inundation_10Y
+  Inundation_100Y
+  Cost_to_personal_property_10Y
+  Cost_to_personal_property_100Y
   Future_loss
   Future_benefit
-  Damage_pct
+  Damage_pct_10Y
+  Damage_pct_100Y
   Moved?
 ]
-
 ;; Set different breed
-;; Poor / normal income people have different discount rate
 breed [ poors poor ]
 breed [ normals normal ]
-
 to Clear
   clear-all
 end
-
-to setup
+to Setup
   clear-all
 
   Initialize_list ;; Initilize lists
-  Input_flood_data ;; Input data from data.csv
+  Input_10Y_flood_data ;; Input data from data.csv
+  Input_100Y_flood_data ;; Input data from data.csv
+  Input_Mulitple ;; Calculate multiple flood
   Update_coefficient_TOTAL  ;; Update values and coefficient in each tick
   Update_coefficient_SUBSIDY_PV
-  set FLOOD_HEIGHT Flood_Height_Meters
+  set FLOOD_HEIGHT_10Y Flood_Height_Meters_10Y
+  set FLOOD_HEIGHT_100Y Flood_Height_Meters_100Y
   set MHHW MHHW_Meters
   set MSL MSL_Meters
   set TIME 0
@@ -58,9 +61,7 @@ to setup
   House_property
   reset-ticks
 end
-
 to Go
-
   ;; stop condition is that every agent has moved
   if ( not any? turtles with [ not moved? ] ) or TIME > 100 [
     stop
@@ -75,9 +76,7 @@ to Go
   ]
   set TIME TIME + 1 ;; add time
   tick
-
 end
-
 to House_property
   foreach gis:feature-list-of GEODATASET [ vector-feature ->
     ;show vector-feature
@@ -95,18 +94,22 @@ to House_property
       set Structure_value gis:property-value vector-feature "IMPROVEMEN"
       set Sq.ft. gis:property-value vector-feature "SQUAREFEET"
       set size 5
-      set color (5 + floor (gis:property-value vector-feature "TOTALMARKE" / 100000 ) * 10)
+      set color (5 + floor (gis:property-value vector-feature "TOTALMARKE" / 200000 ) * 10)
       ;set color (13 + floor (gis:property-value vector-feature "TOTALMARKE" / 20000 ) * 0.01)
-      set Inundation ceiling((Flood_Height - MHHW - MSL - Elevation) * 39.3701)
-       if Inundation < 0
-        [ set Inundation 0 ]
-      Inundation_damage_cost
+      set Inundation_10Y ceiling((Flood_Height_10Y - MHHW - MSL - Elevation) * 39.3701)
+      set Inundation_100Y ceiling((Flood_Height_100Y - MHHW - MSL - Elevation) * 39.3701)
+      if Inundation_10Y < 0
+        [ set Inundation_10Y 0 ]
+      if Inundation_100Y < 0
+        [ set Inundation_100Y 0 ]
+
+
+      Inundation_property_damage_cost
       Setting_agents
       ]
     ]
   ]
 end
-
 to Setting_agents
   ifelse Total_market_value >= House_Price_Cutoff [
     set breed normals
@@ -118,21 +121,32 @@ to Setting_agents
     ;set color red
   ]
   set moved? false
-  Damage_pct_conditions
-                                  ;; set expected loss for the future standing at year one and update at every tick
-  if breed = normals
-  [
-    set Future_loss ( item 0 TOTAL) * Structure_Value * Damage_pct
-  ]
-  if breed = poors
-  [
-    set Future_loss ( item 1 TOTAL) * Structure_Value * Damage_pct
-  ]
+  Damage_structure_pct_conditions ;; set expected loss for the future standing at year one and update at every tick
 end
-
 to Update_coefficient_PAST
   ;; function to calcualte past loss
   ;; item 0 refers to Normal, item 1 refers to Low-income and item 2 refers to government as always
+  if Flood_type = "10_year"[
+  let iter 0
+  loop [
+    if iter >= TIME [ stop ]
+    set PAST_LOSS replace-item 0 PAST_LOSS ( ( item 0 PAST_LOSS) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter ) PROB_10Y_LIST ) ))
+    set PAST_LOSS replace-item 1 PAST_LOSS ( ( item 1 PAST_LOSS) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter ) PROB_10Y_LIST ) ))
+    set PAST_LOSS replace-item 2 PAST_LOSS ( ( item 2 PAST_LOSS) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter ) PROB_10Y_LIST ) ))
+    set iter iter + 1
+    ]
+  ]
+  if Flood_type = "100_year"[
+  let iter 0
+  loop [
+    if iter >= TIME [ stop ]
+    set PAST_LOSS replace-item 0 PAST_LOSS ( ( item 0 PAST_LOSS) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter ) PROB_100Y_LIST ) ))
+    set PAST_LOSS replace-item 1 PAST_LOSS ( ( item 1 PAST_LOSS) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter ) PROB_100Y_LIST ) ))
+    set PAST_LOSS replace-item 2 PAST_LOSS ( ( item 2 PAST_LOSS) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter ) PROB_100Y_LIST ) ))
+    set iter iter + 1
+    ]
+  ]
+  if Flood_type = "Multiple"[
   let iter 0
   loop [
     if iter >= TIME [ stop ]
@@ -140,26 +154,11 @@ to Update_coefficient_PAST
     set PAST_LOSS replace-item 1 PAST_LOSS ( ( item 1 PAST_LOSS) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter ) PROB_LIST ) ))
     set PAST_LOSS replace-item 2 PAST_LOSS ( ( item 2 PAST_LOSS) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter ) PROB_LIST ) ))
     set iter iter + 1
-  ]
-end
-
-to Update_coefficient_TOTAL
-  ;; coefficient of expected future loss
-  ;; if hyperbolic? is true then using hyperbolic discount mode with hyperbolic rate alpha
-  ifelse Hyperbolic? = false [
-    ;; set TOTAL 0
-    let iter 0
-    loop [
-      if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
-                                          ;; set different cumulative future loss
-      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set iter iter + 1
-      ;;show TOTAL  ;; show to check calculation
     ]
   ]
-  [
+end
+to Update_coefficient_TOTAL
+  ;; coefficient of expected future loss
     let iter 0
     loop [
       if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
@@ -170,9 +169,7 @@ to Update_coefficient_TOTAL
       set iter iter + 1
       ;;show TOTAL  ;; show to check calculation
     ]
-  ]
 end
-
 to Update_coefficient_SUBSIDY_PV    ;; function to update one-time subsidy
 
   ;; update subsidy's pv according to time
@@ -182,47 +179,22 @@ to Update_coefficient_SUBSIDY_PV    ;; function to update one-time subsidy
   ;;show SUBSIDY_PV
 
 end
-
-;; Function to update values for agent
-to Update_values
-
+to Update_values ;; Function to update values for agent
   if breed = normals
   [
-    set Future_loss ( item 0 TOTAL)  *   Structure_Value * Damage_pct
-    if Government_strategy = "Fixed-Benefit" [
-      let iter 0
-      loop [
-        if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
-                                            ;; set different cumulative future benefit
-        set future_benefit future_benefit +  ( Fix_benefit / (( 1 + normal_dis) ^ iter ) )
-        set iter iter + 1
-      ]
-    ]
+    set Future_loss ( item 0 TOTAL)  * Structure_Value * Damage_pct
   ]
   if breed = poors
   [
-    set future_loss ( item 1 TOTAL)  *   Structure_Value * Damage_pct
-    if Government_strategy = "Fixed-Benefit" [
-      let iter 0
-      loop [
-        if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
-                                            ;; set different cumulative future benefit
-        set future_benefit future_benefit +  ( Fix_benefit / (( 1 + Poor_dis) ^ iter ) )
-        set iter iter + 1
-      ]
-    ]
+    set Future_loss ( item 1 TOTAL)  *   Structure_Value * Damage_pct
   ]
-
-  ;;show future_loss
-
 end
 to Change_color
-
   ;; if moving cost plus pv of subsidy is greater than future loss then residents will move
   if breed = normals[
-    ifelse Government_strategy = "One-time-Subsidy" [
-      if Total_market_value  * Moving_Cost_Multiplier - ( item 0 SUBSIDY_PV)- future_loss <= threshold [
-        if moved? = false [
+    if Government_strategy = "One-time-Subsidy" [
+      if Total_market_value  * Moving_Cost_Multiplier - ( item 0 SUBSIDY_PV)- Future_loss <= threshold [
+        if moved? = False [
         set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
         set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
@@ -230,21 +202,12 @@ to Change_color
         ]
       ]
     ]
-    [
-      if Total_market_value  * Moving_Cost_Multiplier - future_benefit - future_loss <= threshold [
-        if moved? = false [
-        set color color + 4  ;; change color to red if moved
-        set moved? True ;; resident has moved
-        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
-        set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
-        ]
-      ]
-    ]
+
   ]
   if breed = poors[
-    ifelse Government_strategy = "One-time-Subsidy" [
-      if Total_market_value * Moving_Cost_Multiplier - ( item 1 SUBSIDY_PV)- future_loss <= threshold [
-        if moved? = false [
+    if Government_strategy = "One-time-Subsidy" [
+      if Total_market_value * Moving_Cost_Multiplier - ( item 1 SUBSIDY_PV)- Future_loss <= threshold [
+        if moved? = False [
         set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
         set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
@@ -252,41 +215,54 @@ to Change_color
         ]
       ]
     ]
-    [
-      if Total_market_value  * Moving_Cost_Multiplier - Future_benefit - Future_loss <= threshold [
-        if moved? = false [
-        set color color + 4  ;; change color to red if moved
-        set moved? True ;; resident has moved
-        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
-        set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
-        ]
-      ]
-    ]
+
   ]
 
 end
-
-;; function to plug in flood probability data
-to Input_flood_data
+to Input_10Y_flood_data ;; function to plug in flood probability data
   ;; initilize PROB_LIST and read probability data from outside source
-  set PROB_LIST [ ]
-
+  set PROB_10Y_LIST []
   file-close
-  if Flood_type = "100_year" [
-    file-open "data/100_NY_4.5.csv"
-  ]
-  let iter 0
+  file-open "data/10_NY_4.5.csv"
+  ;let iter 0
   loop [
     ifelse file-at-end? [
       stop ]
     [
-      set PROB_LIST lput file-read PROB_LIST
-      set iter iter + 1
+      set PROB_10Y_LIST lput file-read PROB_10Y_LIST
+      ;set iter iter + 1
     ]
   ]
   file-close
 end
-
+to Input_100Y_flood_data
+  set PROB_100Y_LIST []
+  file-close
+  file-open "data/100_NY_4.5.csv"
+  ;let iter 0
+  loop [
+    ifelse file-at-end? [
+      stop ]
+    [
+      set PROB_100Y_LIST lput file-read PROB_100Y_LIST
+      ;set iter iter + 1
+    ]
+  ]
+  file-close
+end
+to Input_Mulitple
+  set PROB_LIST []
+  let iter 0
+  let len length PROB_10Y_LIST
+  loop [
+    ifelse iter >= len [
+      stop ]
+    [
+      set PROB_LIST lput (( item iter PROB_10Y_LIST) - (item iter PROB_100Y_LIST)) PROB_LIST
+      set iter iter + 1
+    ]
+  ]
+end
 to Hide_moved
   set hidden? True
   if moved? = False[
@@ -294,9 +270,7 @@ to Hide_moved
     set size 15
   ]
 end
-
-;; function to initialize lists
-to Initialize_list
+to Initialize_list ;; function to initialize lists
   set SUBSIDY_PV [] ;; initialize SUBSIDY_PV list
   set TOTAL [] ;; initialize TOTAL list
   set PAST_LOSS [] ;; initialize PAST list
@@ -310,40 +284,38 @@ to Initialize_list
     set iter iter + 1
   ]
 end
-
-to Inundation_damage_cost
-  if Inundation <= 2
-  [ set Cost_to_personal_property 3172]
-  if Inundation > 2 and Inundation <= 3
-  [ set Cost_to_personal_property 4917]
-  if Inundation > 3 and Inundation <= 4
-  [ set Cost_to_personal_property 7207]
-  if Inundation > 4 and Inundation <= 5
-  [ set Cost_to_personal_property 13914]
-  if Inundation > 5 and Inundation <= 6
-  [ set Cost_to_personal_property 14777]
-  if Inundation > 6 and Inundation <= 7
-  [ set Cost_to_personal_property 17700]
-  if Inundation > 7 and Inundation <= 8
-  [ set Cost_to_personal_property 20624]
-  if Inundation > 8 and Inundation <= 9
-  [ set Cost_to_personal_property 23547]
-  if Inundation > 9 and Inundation <= 10
-  [ set Cost_to_personal_property 26470]
-  if Inundation > 10 and Inundation <= 11
-  [ set Cost_to_personal_property 29394]
-  if Inundation > 11 and Inundation <= 12
-  [ set Cost_to_personal_property 32317]
-  if Inundation > 12 and Inundation <= 24
-  [ set Cost_to_personal_property 43001]
-  if Inundation > 24 and Inundation <= 36
-  [ set Cost_to_personal_property 46633]
-  if Inundation > 36
-  [ set Cost_to_personal_property 50000]
+to Inundation_property_damage_cost
+  if Inundation_10Y <= 2
+  [ set Cost_to_personal_property_10Y 3172]
+  if Inundation_10Y > 2 and Inundation_10Y <= 3
+  [ set Cost_to_personal_property_10Y 4917]
+  if Inundation_10Y > 3 and Inundation_10Y <= 4
+  [ set Cost_to_personal_property_10Y 7207]
+  if Inundation_10Y > 4 and Inundation_10Y <= 5
+  [ set Cost_to_personal_property_10Y 13914]
+  if Inundation_10Y > 5 and Inundation_10Y <= 6
+  [ set Cost_to_personal_property_10Y 14777]
+  if Inundation_10Y > 6 and Inundation_10Y <= 7
+  [ set Cost_to_personal_property_10Y 17700]
+  if Inundation_10Y > 7 and Inundation_10Y <= 8
+  [ set Cost_to_personal_property_10Y 20624]
+  if Inundation_10Y > 8 and Inundation_10Y <= 9
+  [ set Cost_to_personal_property_10Y 23547]
+  if Inundation_10Y > 9 and Inundation_10Y <= 10
+  [ set Cost_to_personal_property_10Y 26470]
+  if Inundation_10Y > 10 and Inundation_10Y <= 11
+  [ set Cost_to_personal_property_10Y 29394]
+  if Inundation_10Y > 11 and Inundation_10Y <= 12
+  [ set Cost_to_personal_property_10Y 32317]
+  if Inundation_10Y > 12 and Inundation_10Y <= 24
+  [ set Cost_to_personal_property_10Y 43001]
+  if Inundation_10Y > 24 and Inundation_10Y <= 36
+  [ set Cost_to_personal_property_10Y 46633]
+  if Inundation_10Y > 36
+  [ set Cost_to_personal_property_10Y 50000]
 
 end
-
-to Damage_pct_conditions
+to Damage_structure_pct_conditions
   if Stories = 1 and Basement = ""
   [ Damage_percentage_onestory_basement ]
   if Stories != 1 and Basement = ""
@@ -354,7 +326,6 @@ to Damage_pct_conditions
   [ Damage_percentage_morethanonestory_nobasement ]
 
 end
-
 to Damage_percentage_onestory_basement
   if Inundation <= 0
   [set Damage_pct 0.255]
@@ -381,7 +352,6 @@ to Damage_percentage_onestory_basement
   if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct 0.811]
 end
-
 to Damage_percentage_morethanonestory_basement
   if Inundation <= 0
   [set Damage_pct 0.179]
@@ -408,7 +378,6 @@ to Damage_percentage_morethanonestory_basement
   if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct 0.684]
 end
-
 to Damage_percentage_onestory_nobasement
   if Inundation <= 0
   [set Damage_pct 0.134]
@@ -435,7 +404,6 @@ to Damage_percentage_onestory_nobasement
   if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct 0.754]
 end
-
 to Damage_percentage_morethanonestory_nobasement
   if Inundation <= 0
   [set Damage_pct 0.093]
@@ -470,7 +438,7 @@ GRAPHICS-WINDOW
 1020
 -1
 -1
-0.05
+0.99201
 1
 10
 1
@@ -488,13 +456,13 @@ GRAPHICS-WINDOW
 0
 1
 ticks
-30.0
+60.0
 
 BUTTON
-549
-654
-615
-687
+457
+318
+523
+351
 NIL
 setup
 NIL
@@ -512,7 +480,7 @@ INPUTBOX
 82
 124
 142
-Flood_Height_Meters
+Flood_Height_Meters_10Y
 1.84
 1
 0
@@ -670,17 +638,17 @@ Threshold
 Threshold
 0
 10000
-0.0
+154.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-549
-696
-617
-729
+457
+360
+525
+393
 NIL
 Go
 T
@@ -719,7 +687,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -1 true "" "plot count turtles with [moved?]"
+"default" 1.0 0 -16777216 true "" "plot count turtles with [ moved?]"
 
 BUTTON
 170
@@ -797,10 +765,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count poors with[moved?] / count poors"
 
 BUTTON
-548
-744
-656
-777
+456
+408
+564
+441
 NIL
 Hide_moved
 NIL
@@ -840,11 +808,22 @@ Government_dis
 Government_dis
 0
 1
-0.139
+0.181
 0.001
 1
 NIL
 HORIZONTAL
+
+INPUTBOX
+6
+10
+155
+70
+Flood_Height_Meters_100Y
+0.0
+1
+0
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
