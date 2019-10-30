@@ -102,8 +102,6 @@ to House_property
         [ set Inundation_10Y 0 ]
       if Inundation_100Y < 0
         [ set Inundation_100Y 0 ]
-
-
       Inundation_property_damage_cost
       Setting_agents
       ]
@@ -153,53 +151,99 @@ to Update_coefficient_PAST
     set PAST_LOSS replace-item 0 PAST_LOSS ( ( item 0 PAST_LOSS) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter ) PROB_LIST ) ))
     set PAST_LOSS replace-item 1 PAST_LOSS ( ( item 1 PAST_LOSS) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter ) PROB_LIST ) ))
     set PAST_LOSS replace-item 2 PAST_LOSS ( ( item 2 PAST_LOSS) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter ) PROB_LIST ) ))
+    set PAST_LOSS replace-item 3 PAST_LOSS ( ( item 3 PAST_LOSS) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter ) PROB_10Y_LIST ) ))
+    set PAST_LOSS replace-item 4 PAST_LOSS ( ( item 4 PAST_LOSS) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter ) PROB_10Y_LIST ) ))
+    set PAST_LOSS replace-item 5 PAST_LOSS ( ( item 5 PAST_LOSS) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter ) PROB_10Y_LIST ) ))
     set iter iter + 1
     ]
   ]
 end
 to Update_coefficient_TOTAL
   ;; coefficient of expected future loss
-    let iter 0
+  let iter 0
+  if Flood_type = "10_year"[
     loop [
       if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
                                           ;; set different cumulative future loss
-      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis + Hyperbolic_rate * iter ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis + Hyperbolic_rate * iter  ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis  ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
       set iter iter + 1
       ;;show TOTAL  ;; show to check calculation
     ]
+  ]
+  if Flood_type = "100_year"[
+    loop [
+      if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
+                                          ;; set different cumulative future loss
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_100Y_LIST ) ))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis  ) ^ iter ) * ( item ( iter + TIME ) PROB_100Y_LIST ) ))
+      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_100Y_LIST ) ))
+      set iter iter + 1
+      ;;show TOTAL  ;; show to check calculation
+    ]
+  ]
+  if Flood_type = "Multiple"[
+    loop [
+      if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
+                                          ;; set different cumulative future loss
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
+      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
+      set TOTAL replace-item 3 TOTAL ( ( item 3 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 4 TOTAL ( ( item 4 TOTAL) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 5 TOTAL ( ( item 5 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
+      set iter iter + 1
+      ;;show TOTAL  ;; show to check calculation
+    ]
+  ]
 end
 to Update_coefficient_SUBSIDY_PV    ;; function to update one-time subsidy
-
-  ;; update subsidy's pv according to time
   set SUBSIDY_PV replace-item 0 SUBSIDY_PV ( Subsidy / ( 1 + Normal_dis ) ^ TIME )
   set SUBSIDY_PV replace-item 1 SUBSIDY_PV ( Subsidy / ( 1 + Poor_dis ) ^ TIME )
   set SUBSIDY_PV replace-item 2 SUBSIDY_PV ( Subsidy / ( 1 + Government_dis) ^ TIME )
-  ;;show SUBSIDY_PV
-
 end
 to Update_values ;; Function to update values for agent
   if breed = normals
   [
-    set Future_loss ( item 0 TOTAL)  * Structure_Value * Damage_pct
+    if Flood_type = "10_year"[
+    set Future_loss (item 0 TOTAL)  * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y
+    ]
+    if Flood_type = "100_year"[
+    set Future_loss (item 0 TOTAL) * Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y
+    ]
+    if Flood_type = "Multiple"[
+      set Future_loss (((item 3 TOTAL) * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 0 TOTAL) *  Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
+  ]
   ]
   if breed = poors
   [
-    set Future_loss ( item 1 TOTAL)  *   Structure_Value * Damage_pct
+    if Flood_type = "10_year"[
+    set Future_loss (item 1 TOTAL)  * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y
+    ]
+    if Flood_type = "100_year"[
+    set Future_loss (item 2 TOTAL) * Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y
+    ]
+    if Flood_type = "Multiple"[
+    set Future_loss (((item 4 TOTAL) * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 2 TOTAL) *  Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
+    ]
   ]
 end
 to Change_color
   ;; if moving cost plus pv of subsidy is greater than future loss then residents will move
   if breed = normals[
     if Government_strategy = "One-time-Subsidy" [
-      if Total_market_value  * Moving_Cost_Multiplier - ( item 0 SUBSIDY_PV)- Future_loss <= threshold [
+      if Total_market_value  * Moving_Cost_Multiplier - ( item 0 SUBSIDY_PV )- Future_loss <= threshold [
         if moved? = False [
         set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
+        ifelse Flood_type = "Multiple"[
         set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
-        ]
+          ][
+        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
+        set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
+          ]
       ]
     ]
 
@@ -210,12 +254,18 @@ to Change_color
         if moved? = False [
         set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
+        ifelse Flood_type = "Multiple"[
         set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
-        ]
+          ][
+        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
+        set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
+          ]
+       ]
       ]
     ]
 
+  ]
   ]
 
 end
@@ -275,7 +325,7 @@ to Initialize_list ;; function to initialize lists
   set TOTAL [] ;; initialize TOTAL list
   set PAST_LOSS [] ;; initialize PAST list
   let iter 0
-  set CLASS 3
+  set CLASS 6
   loop [
     if iter > CLASS [ stop ]
     set SUBSIDY_PV lput 0 SUBSIDY_PV
@@ -313,7 +363,34 @@ to Inundation_property_damage_cost
   [ set Cost_to_personal_property_10Y 46633]
   if Inundation_10Y > 36
   [ set Cost_to_personal_property_10Y 50000]
-
+  if Inundation_100Y <= 2
+  [ set Cost_to_personal_property_100Y 3172]
+  if Inundation_100Y > 2 and Inundation_100Y <= 3
+  [ set Cost_to_personal_property_100Y 4917]
+  if Inundation_100Y > 3 and Inundation_100Y <= 4
+  [ set Cost_to_personal_property_100Y 7207]
+  if Inundation_100Y > 4 and Inundation_100Y <= 5
+  [ set Cost_to_personal_property_100Y 13914]
+  if Inundation_100Y > 5 and Inundation_100Y <= 6
+  [ set Cost_to_personal_property_100Y 14777]
+  if Inundation_100Y > 6 and Inundation_100Y <= 7
+  [ set Cost_to_personal_property_100Y 17700]
+  if Inundation_100Y > 7 and Inundation_100Y <= 8
+  [ set Cost_to_personal_property_100Y 20624]
+  if Inundation_100Y > 8 and Inundation_10Y <= 9
+  [ set Cost_to_personal_property_100Y 23547]
+  if Inundation_100Y > 9 and Inundation_10Y <= 10
+  [ set Cost_to_personal_property_100Y 26470]
+  if Inundation_100Y > 10 and Inundation_100Y <= 11
+  [ set Cost_to_personal_property_100Y 29394]
+  if Inundation_100Y > 11 and Inundation_100Y <= 12
+  [ set Cost_to_personal_property_100Y 32317]
+  if Inundation_100Y > 12 and Inundation_100Y <= 24
+  [ set Cost_to_personal_property_100Y 43001]
+  if Inundation_100Y > 24 and Inundation_100Y <= 36
+  [ set Cost_to_personal_property_100Y 46633]
+  if Inundation_100Y > 36
+  [ set Cost_to_personal_property_100Y 50000]
 end
 to Damage_structure_pct_conditions
   if Stories = 1 and Basement = ""
@@ -327,118 +404,214 @@ to Damage_structure_pct_conditions
 
 end
 to Damage_percentage_onestory_basement
-  if Inundation <= 0
-  [set Damage_pct 0.255]
-  if Inundation > 0 and Inundation <= 1
-  [set Damage_pct 0.32]
-  if Inundation > 1 and Inundation <= 2
-  [set Damage_pct 0.387]
-  if Inundation > 2 and Inundation <= 3
-  [set Damage_pct 0.455]
-  if Inundation > 3 and Inundation <= 4
-  [set Damage_pct 0.522]
-  if Inundation > 4 and Inundation <= 5
-  [set Damage_pct 0.586]
-  if Inundation > 5 and Inundation <= 6
-  [set Damage_pct 0.645]
-  if Inundation > 6 and Inundation <= 7
-  [set Damage_pct 0.698]
-  if Inundation > 7 and Inundation <= 8
-  [set Damage_pct 0.742]
-  if Inundation > 8 and Inundation <= 9
-  [set Damage_pct 0.777]
-  if Inundation > 9 and Inundation <= 10
-  [set Damage_pct 0.801]
-  if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
-  [set Damage_pct 0.811]
+  if Inundation_10Y <= 0
+  [set Damage_pct_10Y 0.255]
+  if Inundation_10Y > 0 and Inundation_10Y <= 1
+  [set Damage_pct_10Y 0.32]
+  if Inundation_10Y > 1 and Inundation_10Y <= 2
+  [set Damage_pct_10Y 0.387]
+  if Inundation_10Y > 2 and Inundation_10Y <= 3
+  [set Damage_pct_10Y 0.455]
+  if Inundation_10Y > 3 and Inundation_10Y <= 4
+  [set Damage_pct_10Y 0.522]
+  if Inundation_10Y > 4 and Inundation_10Y <= 5
+  [set Damage_pct_10Y 0.586]
+  if Inundation_10Y > 5 and Inundation_10Y <= 6
+  [set Damage_pct_10Y 0.645]
+  if Inundation_10Y > 6 and Inundation_10Y <= 7
+  [set Damage_pct_10Y 0.698]
+  if Inundation_10Y > 7 and Inundation_10Y <= 8
+  [set Damage_pct_10Y 0.742]
+  if Inundation_10Y > 8 and Inundation_10Y <= 9
+  [set Damage_pct_10Y 0.777]
+  if Inundation_10Y > 9 and Inundation_10Y <= 10
+  [set Damage_pct_10Y 0.801]
+  if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
+  [set Damage_pct_10Y 0.811]
+  if Inundation_100Y <= 0
+  [set Damage_pct_100Y 0.255]
+  if Inundation_100Y > 0 and Inundation_100Y <= 1
+  [set Damage_pct_100Y 0.32]
+  if Inundation_100Y > 1 and Inundation_100Y <= 2
+  [set Damage_pct_100Y 0.387]
+  if Inundation_100Y > 2 and Inundation_100Y <= 3
+  [set Damage_pct_100Y 0.455]
+  if Inundation_100Y > 3 and Inundation_100Y <= 4
+  [set Damage_pct_100Y 0.522]
+  if Inundation_100Y > 4 and Inundation_100Y <= 5
+  [set Damage_pct_100Y 0.586]
+  if Inundation_100Y > 5 and Inundation_100Y <= 6
+  [set Damage_pct_100Y 0.645]
+  if Inundation_100Y > 6 and Inundation_100Y <= 7
+  [set Damage_pct_100Y 0.698]
+  if Inundation_100Y > 7 and Inundation_100Y <= 8
+  [set Damage_pct_10Y 0.742]
+  if Inundation_100Y > 8 and Inundation_100Y <= 9
+  [set Damage_pct_100Y 0.777]
+  if Inundation_100Y > 9 and Inundation_100Y <= 10
+  [set Damage_pct_100Y 0.801]
+  if Inundation_100Y > 10                     ;Inundation > 10 consider the same high damage to the house
+  [set Damage_pct_100Y 0.811]
 end
 to Damage_percentage_morethanonestory_basement
-  if Inundation <= 0
-  [set Damage_pct 0.179]
-  if Inundation > 0 and Inundation <= 1
-  [set Damage_pct 0.223]
-  if Inundation > 1 and Inundation <= 2
-  [set Damage_pct 0.270]
-  if Inundation > 2 and Inundation <= 3
-  [set Damage_pct 0.319]
-  if Inundation > 3 and Inundation <= 4
-  [set Damage_pct 0.369]
-  if Inundation > 4 and Inundation <= 5
-  [set Damage_pct 0.419]
-  if Inundation > 5 and Inundation <= 6
-  [set Damage_pct 0.469]
-  if Inundation > 6 and Inundation <= 7
-  [set Damage_pct 0.518]
-  if Inundation > 7 and Inundation <= 8
-  [set Damage_pct 0.564]
-  if Inundation > 8 and Inundation <= 9
-  [set Damage_pct 0.608]
-  if Inundation > 9 and Inundation <= 10
-  [set Damage_pct 0.648]
-  if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
-  [set Damage_pct 0.684]
+  if Inundation_10Y <= 0
+  [set Damage_pct_10Y 0.179]
+  if Inundation_10Y > 0 and Inundation_10Y <= 1
+  [set Damage_pct_10Y 0.223]
+  if Inundation_10Y > 1 and Inundation_10Y <= 2
+  [set Damage_pct_10Y 0.270]
+  if Inundation_10Y > 2 and Inundation_10Y <= 3
+  [set Damage_pct_10Y 0.319]
+  if Inundation_10Y > 3 and Inundation_10Y <= 4
+  [set Damage_pct_10Y 0.369]
+  if Inundation_10Y > 4 and Inundation_10Y <= 5
+  [set Damage_pct_10Y 0.419]
+  if Inundation_10Y > 5 and Inundation_10Y <= 6
+  [set Damage_pct_10Y 0.469]
+  if Inundation_10Y > 6 and Inundation_10Y <= 7
+  [set Damage_pct_10Y 0.518]
+  if Inundation_10Y > 7 and Inundation_10Y <= 8
+  [set Damage_pct_10Y 0.564]
+  if Inundation_10Y > 8 and Inundation_10Y <= 9
+  [set Damage_pct_10Y 0.608]
+  if Inundation_10Y > 9 and Inundation_10Y <= 10
+  [set Damage_pct_10Y 0.648]
+  if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
+  [set Damage_pct_10Y 0.684]
+  if Inundation_100Y <= 0
+  [set Damage_pct_100Y 0.179]
+  if Inundation_100Y > 0 and Inundation_100Y <= 1
+  [set Damage_pct_100Y 0.223]
+  if Inundation_100Y > 1 and Inundation_100Y <= 2
+  [set Damage_pct_100Y 0.270]
+  if Inundation_100Y > 2 and Inundation_100Y <= 3
+  [set Damage_pct_100Y 0.319]
+  if Inundation_100Y > 3 and Inundation_100Y <= 4
+  [set Damage_pct_100Y 0.369]
+  if Inundation_100Y > 4 and Inundation_100Y <= 5
+  [set Damage_pct_100Y 0.419]
+  if Inundation_100Y > 5 and Inundation_100Y <= 6
+  [set Damage_pct_100Y 0.469]
+  if Inundation_100Y > 6 and Inundation_100Y <= 7
+  [set Damage_pct_100Y 0.518]
+  if Inundation_100Y > 7 and Inundation_100Y <= 8
+  [set Damage_pct_100Y 0.564]
+  if Inundation_100Y > 8 and Inundation_100Y <= 9
+  [set Damage_pct_100Y 0.608]
+  if Inundation_100Y > 9 and Inundation_100Y <= 10
+  [set Damage_pct_100Y 0.648]
+  if Inundation_100Y > 10                     ;Inundation > 10 consider the same high damage to the house
+  [set Damage_pct_100Y 0.684]
 end
 to Damage_percentage_onestory_nobasement
-  if Inundation <= 0
-  [set Damage_pct 0.134]
-  if Inundation > 0 and Inundation <= 1
-  [set Damage_pct 0.233]
-  if Inundation > 1 and Inundation <= 2
-  [set Damage_pct 0.321]
-  if Inundation > 2 and Inundation <= 3
-  [set Damage_pct 0.401]
-  if Inundation > 3 and Inundation <= 4
-  [set Damage_pct 0.471]
-  if Inundation > 4 and Inundation <= 5
-  [set Damage_pct 0.532]
-  if Inundation > 5 and Inundation <= 6
-  [set Damage_pct 0.586]
-  if Inundation > 6 and Inundation <= 7
-  [set Damage_pct 0.632]
-  if Inundation > 7 and Inundation <= 8
-  [set Damage_pct 0.672]
-  if Inundation > 8 and Inundation <= 9
-  [set Damage_pct 0.705]
-  if Inundation > 9 and Inundation <= 10
-  [set Damage_pct 0.732]
-  if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
-  [set Damage_pct 0.754]
+  if Inundation_10Y <= 0
+  [set Damage_pct_10Y 0.134]
+  if Inundation_10Y > 0 and Inundation_10Y <= 1
+  [set Damage_pct_10Y 0.233]
+  if Inundation_10Y > 1 and Inundation_10Y <= 2
+  [set Damage_pct_10Y 0.321]
+  if Inundation_10Y > 2 and Inundation_10Y <= 3
+  [set Damage_pct_10Y 0.401]
+  if Inundation_10Y > 3 and Inundation_10Y <= 4
+  [set Damage_pct_10Y 0.471]
+  if Inundation_10Y > 4 and Inundation_10Y <= 5
+  [set Damage_pct_10Y 0.532]
+  if Inundation_10Y > 5 and Inundation_10Y <= 6
+  [set Damage_pct_10Y 0.586]
+  if Inundation_10Y > 6 and Inundation_10Y <= 7
+  [set Damage_pct_10Y 0.632]
+  if Inundation_10Y > 7 and Inundation_10Y <= 8
+  [set Damage_pct_10Y 0.672]
+  if Inundation_10Y > 8 and Inundation_10Y <= 9
+  [set Damage_pct_10Y 0.705]
+  if Inundation_10Y > 9 and Inundation_10Y <= 10
+  [set Damage_pct_10Y 0.732]
+  if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
+  [set Damage_pct_10Y 0.754]
+  if Inundation_100Y <= 0
+  [set Damage_pct_100Y 0.134]
+  if Inundation_100Y > 0 and Inundation_100Y <= 1
+  [set Damage_pct_100Y 0.233]
+  if Inundation_100Y > 1 and Inundation_100Y <= 2
+  [set Damage_pct_100Y 0.321]
+  if Inundation_100Y > 2 and Inundation_100Y <= 3
+  [set Damage_pct_100Y 0.401]
+  if Inundation_100Y > 3 and Inundation_100Y <= 4
+  [set Damage_pct_100Y 0.471]
+  if Inundation_100Y > 4 and Inundation_100Y <= 5
+  [set Damage_pct_100Y 0.532]
+  if Inundation_100Y > 5 and Inundation_100Y <= 6
+  [set Damage_pct_10Y 0.586]
+  if Inundation_100Y > 6 and Inundation_100Y <= 7
+  [set Damage_pct_100Y 0.632]
+  if Inundation_100Y > 7 and Inundation_100Y <= 8
+  [set Damage_pct_100Y 0.672]
+  if Inundation_100Y > 8 and Inundation_100Y <= 9
+  [set Damage_pct_100Y 0.705]
+  if Inundation_100Y > 9 and Inundation_100Y <= 10
+  [set Damage_pct_100Y 0.732]
+  if Inundation_100Y > 10                     ;Inundation > 10 consider the same high damage to the house
+  [set Damage_pct_100Y 0.754]
 end
 to Damage_percentage_morethanonestory_nobasement
-  if Inundation <= 0
-  [set Damage_pct 0.093]
-  if Inundation > 0 and Inundation <= 1
-  [set Damage_pct 0.152]
-  if Inundation > 1 and Inundation <= 2
-  [set Damage_pct 0.209]
-  if Inundation > 2 and Inundation <= 3
-  [set Damage_pct 0.263]
-  if Inundation > 3 and Inundation <= 4
-  [set Damage_pct 0.314]
-  if Inundation > 4 and Inundation <= 5
-  [set Damage_pct 0.362]
-  if Inundation > 5 and Inundation <= 6
-  [set Damage_pct 0.407]
-  if Inundation > 6 and Inundation <= 7
-  [set Damage_pct 0.449]
-  if Inundation > 7 and Inundation <= 8
-  [set Damage_pct 0.488]
-  if Inundation > 8 and Inundation <= 9
-  [set Damage_pct 0.524]
-  if Inundation > 9 and Inundation <= 10
-  [set Damage_pct 0.557]
-  if Inundation > 10                     ;Inundation > 10 consider the same high damage to the house
-  [set Damage_pct 0.587]
+  if Inundation_10Y <= 0
+  [set Damage_pct_10Y 0.093]
+  if Inundation_10Y > 0 and Inundation_10Y <= 1
+  [set Damage_pct_10Y 0.152]
+  if Inundation_10Y > 1 and Inundation_10Y <= 2
+  [set Damage_pct_10Y 0.209]
+  if Inundation_10Y > 2 and Inundation_10Y <= 3
+  [set Damage_pct_10Y 0.263]
+  if Inundation_10Y > 3 and Inundation_10Y <= 4
+  [set Damage_pct_10Y 0.314]
+  if Inundation_10Y > 4 and Inundation_10Y <= 5
+  [set Damage_pct_10Y 0.362]
+  if Inundation_10Y > 5 and Inundation_10Y <= 6
+  [set Damage_pct_10Y 0.407]
+  if Inundation_10Y > 6 and Inundation_10Y <= 7
+  [set Damage_pct_10Y 0.449]
+  if Inundation_10Y > 7 and Inundation_10Y <= 8
+  [set Damage_pct_10Y 0.488]
+  if Inundation_10Y > 8 and Inundation_10Y <= 9
+  [set Damage_pct_10Y 0.524]
+  if Inundation_10Y > 9 and Inundation_10Y <= 10
+  [set Damage_pct_10Y 0.557]
+  if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
+  [set Damage_pct_10Y 0.587]
+  if Inundation_100Y <= 0
+  [set Damage_pct_100Y 0.093]
+  if Inundation_100Y > 0 and Inundation_100Y <= 1
+  [set Damage_pct_100Y 0.152]
+  if Inundation_100Y > 1 and Inundation_100Y <= 2
+  [set Damage_pct_100Y 0.209]
+  if Inundation_100Y > 2 and Inundation_100Y <= 3
+  [set Damage_pct_100Y 0.263]
+  if Inundation_100Y > 3 and Inundation_100Y <= 4
+  [set Damage_pct_100Y 0.314]
+  if Inundation_100Y > 4 and Inundation_100Y <= 5
+  [set Damage_pct_100Y 0.362]
+  if Inundation_100Y > 5 and Inundation_100Y <= 6
+  [set Damage_pct_100Y 0.407]
+  if Inundation_100Y > 6 and Inundation_100Y <= 7
+  [set Damage_pct_100Y 0.449]
+  if Inundation_100Y > 7 and Inundation_100Y <= 8
+  [set Damage_pct_10Y 0.488]
+  if Inundation_100Y > 8 and Inundation_100Y <= 9
+  [set Damage_pct_100Y 0.524]
+  if Inundation_100Y > 9 and Inundation_100Y <= 10
+  [set Damage_pct_100Y 0.557]
+  if Inundation_100Y > 10                     ;Inundation > 10 consider the same high damage to the house
+  [set Damage_pct_100Y 0.587]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 689
 10
-1690
-1020
+997
+319
 -1
 -1
-0.99201
+0.3
 1
 10
 1
@@ -478,10 +651,10 @@ NIL
 INPUTBOX
 5
 82
-124
+163
 142
 Flood_Height_Meters_10Y
-1.84
+1.11
 1
 0
 Number
@@ -519,10 +692,10 @@ Location
 0
 
 CHOOSER
-140
-139
-303
-184
+170
+60
+333
+105
 Government_Strategy
 Government_Strategy
 "One-time-Subsidy" "Fixed-Benefits"
@@ -669,7 +842,7 @@ CHOOSER
 Flood_type
 Flood_type
 "100_year" "10_year" "Multiple"
-0
+2
 
 PLOT
 8
@@ -808,7 +981,7 @@ Government_dis
 Government_dis
 0
 1
-0.181
+0.309
 0.001
 1
 NIL
@@ -817,10 +990,10 @@ HORIZONTAL
 INPUTBOX
 6
 10
-155
+162
 70
 Flood_Height_Meters_100Y
-0.0
+1.84
 1
 0
 Number

@@ -1,4 +1,4 @@
-extensions [csv gis]
+extensions [gis]
 
 globals[
   GEODATASET
@@ -50,9 +50,11 @@ to setup
   set MHHW MHHW_Meters
   set MSL MSL_Meters
   set TIME 0
-  set GEODATASET gis:load-dataset "data/NY11234-11236.shp"
+  set GEODATASET gis:load-dataset "data/Export_Output_2.shp"
   ; Set the world envelope to the union of all of our dataset's envelopes
-  gis:set-world-envelope (gis:envelope-union-of (gis:envelope-of GEODATASET))
+  gis:set-world-envelope (gis:envelope-union-of [-95.110775 -94.740978 29.096261 29.325346])
+  ;set GEODATASET gis:load-dataset "data/NY11234-11236.shp"
+  ;gis:set-world-envelope (gis:envelope-union-of (gis:envelope-of GEODATASET))
   House_property
   reset-ticks
 end
@@ -80,6 +82,7 @@ to House_property
     ;show vector-feature
     let loc gis:location-of(first(first (gis:vertex-lists-of vector-feature)))
     if not empty? loc[
+      ;show loc
       create-turtles 1[
       set xcor item 0 loc
       set ycor item 1 loc
@@ -91,7 +94,8 @@ to House_property
       set Total_market_value gis:property-value vector-feature "TOTALMARKE"
       set Structure_value gis:property-value vector-feature "IMPROVEMEN"
       set Sq.ft. gis:property-value vector-feature "SQUAREFEET"
-      set size 8
+      set size 10
+       ;set color (13 + floor (gis:property-value vector-feature "TOTALMARKE" / 20000 ) * 0.01)
       set color (5 + floor (gis:property-value vector-feature "TOTALMARKE" / 200000 ) * 10)
       set Inundation ceiling((Flood_Height - MHHW - MSL - Elevation) * 39.3701)
        if Inundation < 0
@@ -357,7 +361,7 @@ to Change_color
     if Government_strategy = "One-time-Subsidy" [
       if Total_market_value  * Moving_Cost_Multiplier - ( item 0 SUBSIDY_PV)- Future_loss <= threshold [
         if moved? = False [
-        set color color + 4  ;; change color to red if moved
+        set color color + 3 ;; change color to red if moved
         set moved? True ;; resident has moved
         ]
       ]
@@ -368,7 +372,7 @@ to Change_color
     if Government_strategy = "One-time-Subsidy" [
       if Total_market_value * Moving_Cost_Multiplier - ( item 1 SUBSIDY_PV)- Future_loss <= threshold [
         if moved? = False [
-        set color color + 4  ;; change color to red if moved
+        set color color + 3 ;; change color to red if moved
         set moved? True ;; resident has moved
         ]
       ]
@@ -416,11 +420,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1197
-519
+1465
+787
 -1
 -1
-0.5
+0.3
 1
 10
 1
@@ -430,10 +434,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--1000
+-1600
 0
 0
-1000
+1600
 0
 0
 1
@@ -463,7 +467,7 @@ INPUTBOX
 124
 142
 Flood_Height_Meters
-1.84
+1.89
 1
 0
 Number
@@ -474,7 +478,7 @@ INPUTBOX
 125
 210
 MHHW_Meters
-2.543
+1.765
 1
 0
 Number
@@ -485,7 +489,7 @@ INPUTBOX
 126
 279
 MSL_Meters
-1.785
+1.588
 1
 0
 Number
@@ -534,7 +538,7 @@ Fix_benefit
 Fix_benefit
 0
 10000
-83.0
+0.0
 1
 1
 NIL
@@ -605,7 +609,7 @@ Subsidy
 Subsidy
 0
 1000000
-796200.0
+82800.0
 100
 1
 NIL
@@ -670,7 +674,6 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles with [moved?]"
-"pen-1" 1.0 0 -7500403 true "" "show count turtles with [moved?]"
 
 BUTTON
 170
@@ -695,7 +698,7 @@ INPUTBOX
 539
 244
 House_Price_Cutoff
-389000.0
+184790.0
 1
 0
 Number
