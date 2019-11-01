@@ -56,8 +56,10 @@ to Setup
   set MSL MSL_Meters
   set TIME 0
   set GEODATASET gis:load-dataset "data/NY11234-11236.shp"
+
   ; Set the world envelope to the union of all of our dataset's envelopes
   gis:set-world-envelope (gis:envelope-union-of (gis:envelope-of GEODATASET))
+  show gis:envelope-of GEODATASET
   House_property
   reset-ticks
 end
@@ -212,8 +214,8 @@ to Update_values ;; Function to update values for agent
     if Flood_type = "100_year"[
     set Future_loss (item 0 TOTAL) * Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y
     ]
-    if Flood_type = "Multple"[
-      set Future_loss (((item 3 TOTAL) * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 2 TOTAL) *  Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
+    if Flood_type = "Multiple"[
+      set Future_loss (((item 3 TOTAL) * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 0 TOTAL) *  Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
   ]
   ]
   if breed = poors
@@ -224,7 +226,7 @@ to Update_values ;; Function to update values for agent
     if Flood_type = "100_year"[
     set Future_loss (item 2 TOTAL) * Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y
     ]
-    if Flood_type = "Multuple"[
+    if Flood_type = "Multiple"[
     set Future_loss (((item 4 TOTAL) * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 2 TOTAL) *  Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
     ]
   ]
@@ -269,6 +271,7 @@ to Change_color
   ]
 
 end
+
 to Input_10Y_flood_data ;; function to plug in flood probability data
   ;; initilize PROB_LIST and read probability data from outside source
   set PROB_10Y_LIST []
@@ -607,11 +610,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-2290
-1612
+1421
+743
 -1
 -1
-1.59141
+0.1
 1
 10
 1
@@ -796,7 +799,7 @@ Subsidy
 Subsidy
 0
 10000
-9600.0
+2900.0
 100
 1
 NIL
@@ -842,7 +845,7 @@ CHOOSER
 Flood_type
 Flood_type
 "100_year" "10_year" "Multiple"
-2
+0
 
 PLOT
 8
@@ -981,7 +984,7 @@ Government_dis
 Government_dis
 0
 1
-0.309
+0.26
 0.001
 1
 NIL
