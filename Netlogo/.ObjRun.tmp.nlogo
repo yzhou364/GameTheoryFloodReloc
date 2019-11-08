@@ -1,5 +1,6 @@
 extensions [csv gis]
-
+breed [ poors poor ] ;; Set different breed
+breed [ normals normal ]
 globals[
   GEODATASET
   FLOOD_HEIGHT_10Y
@@ -35,9 +36,6 @@ turtles-own[
   Damage_pct_100Y
   Moved?
 ]
-;; Set different breed
-breed [ poors poor ]
-breed [ normals normal ]
 to Clear
   clear-all
 end
@@ -55,22 +53,23 @@ to Setup
   set MHHW MHHW_Meters
   set MSL MSL_Meters
   set TIME 0
+  set GEODATASET gis:load-dataset "data/Export_Output_2.shp"
   set GEODATASET gis:load-dataset "data/NY11234-11236.shp"
-
   ; Set the world envelope to the union of all of our dataset's envelopes
   gis:set-world-envelope (gis:envelope-union-of (gis:envelope-of GEODATASET))
-  show gis:envelope-of GEODATASET
+  ; show gis:envelope-of GEODATASET
   House_property
   reset-ticks
 end
 to Go
   ;; stop condition is that every agent has moved
-  if ( not any? turtles with [ not moved? ] ) or TIME > 100 [
+  if TIME > 100 [
     stop
   ]
 
   Update_coefficient_TOTAL  ;; update values and coefficient in each tick
   Update_coefficient_SUBSIDY_PV ;; update subsidy pv value
+  Update_coefficient_PAST ;; update past loss
 
   ask turtles [
     Update_values   ;; update values for every agent
@@ -209,25 +208,25 @@ to Update_values ;; Function to update values for agent
   if breed = normals
   [
     if Flood_type = "10_year"[
-    set Future_loss (item 0 TOTAL)  * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y
+    set Future_loss (item 0 TOTAL)  *(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
     ]
     if Flood_type = "100_year"[
-    set Future_loss (item 0 TOTAL) * Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y
+    set Future_loss (item 0 TOTAL) * (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y)
     ]
     if Flood_type = "Multiple"[
-      set Future_loss (((item 3 TOTAL) * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 0 TOTAL) *  Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
+      set Future_loss (((item 3 TOTAL) * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 0 TOTAL) *  (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))))
   ]
   ]
   if breed = poors
   [
     if Flood_type = "10_year"[
-    set Future_loss (item 1 TOTAL)  * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y
+    set Future_loss (item 1 TOTAL)  * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
     ]
     if Flood_type = "100_year"[
-    set Future_loss (item 2 TOTAL) * Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y
+    set Future_loss (item 2 TOTAL) * (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y)
     ]
     if Flood_type = "Multiple"[
-    set Future_loss (((item 4 TOTAL) * Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 2 TOTAL) *  Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
+    set Future_loss (((item 4 TOTAL) * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 1 TOTAL) *  (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))))
     ]
   ]
 end
@@ -235,32 +234,42 @@ to Change_color
   ;; if moving cost plus pv of subsidy is greater than future loss then residents will move
   if breed = normals[
     if Government_strategy = "One-time-Subsidy" [
-      if Total_market_value  * Moving_Cost_Multiplier - ( item 0 SUBSIDY_PV )- Future_loss <= threshold [
+      if Total_market_value  * Moving_Cost_Multiplier - Subsidy - Future_loss <= threshold [
         if moved? = False [
         set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
-        ifelse Flood_type = "Multiple"[
-        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
+        if Flood_type = "Multiple"[
+        set OBJECTIVE OBJECTIVE + (item 2 PAST_LOSS )*((Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + (item 5 PAST_LOSS )* (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
-          ][
-        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
+          ]
+        if Flood_type = "100_year" [
+        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y)
+        set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
+          ]
+        if Flood_type = "10_year" [
+        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
           ]
       ]
     ]
-
+  ]
   ]
   if breed = poors[
     if Government_strategy = "One-time-Subsidy" [
-      if Total_market_value * Moving_Cost_Multiplier - ( item 1 SUBSIDY_PV)- Future_loss <= threshold [
+      if Total_market_value * Moving_Cost_Multiplier - Subsidy - Future_loss <= threshold [
         if moved? = False [
         set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
-        ifelse Flood_type = "Multiple"[
-        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
+        if Flood_type = "Multiple"[
+        set OBJECTIVE OBJECTIVE +  ((item 2 PAST_LOSS )*(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + (item 5 PAST_LOSS )* (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
-          ][
-        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )* Total_market_value
+          ]
+        if Flood_type = "100_year" [
+        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y)
+        set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
+          ]
+        if Flood_type = "10_year" [
+        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
           ]
        ]
@@ -268,10 +277,7 @@ to Change_color
     ]
 
   ]
-  ]
-
 end
-
 to Input_10Y_flood_data ;; function to plug in flood probability data
   ;; initilize PROB_LIST and read probability data from outside source
   set PROB_10Y_LIST []
@@ -610,11 +616,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1421
-743
+1690
+1020
 -1
 -1
-0.1
+0.99201
 1
 10
 1
@@ -635,10 +641,10 @@ ticks
 60.0
 
 BUTTON
-457
-318
-523
-351
+333
+173
+399
+206
 NIL
 setup
 NIL
@@ -712,8 +718,8 @@ SLIDER
 Period
 Period
 0
-200
-99.0
+100
+100.0
 1
 1
 NIL
@@ -758,7 +764,7 @@ Poor_dis
 Poor_dis
 0
 1
-0.24
+0.18
 0.01
 1
 NIL
@@ -798,8 +804,8 @@ SLIDER
 Subsidy
 Subsidy
 0
-10000
-2900.0
+1000000
+0.0
 100
 1
 NIL
@@ -814,17 +820,17 @@ Threshold
 Threshold
 0
 10000
-154.0
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-457
-360
-525
-393
+333
+215
+401
+248
 NIL
 Go
 T
@@ -845,7 +851,7 @@ CHOOSER
 Flood_type
 Flood_type
 "100_year" "10_year" "Multiple"
-0
+2
 
 PLOT
 8
@@ -899,7 +905,7 @@ INPUTBOX
 667
 129
 Moving_Cost_Multiplier
-4.0
+5.0
 1
 0
 Number
@@ -941,10 +947,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count poors with[moved?] / count poors"
 
 BUTTON
-456
-408
-564
-441
+332
+263
+440
+296
 NIL
 Hide_moved
 NIL
@@ -958,10 +964,10 @@ NIL
 1
 
 PLOT
-7
-638
-202
-823
+453
+276
+648
+461
 Objective
 Time
 Objective
@@ -984,7 +990,7 @@ Government_dis
 Government_dis
 0
 1
-0.26
+0.025
 0.001
 1
 NIL
@@ -1348,61 +1354,12 @@ NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="best_Subsidy" repetitions="1" sequentialRunOrder="false" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
-    <metric>count turtles with [ moved? ]</metric>
-    <enumeratedValueSet variable="Location">
-      <value value="&quot;NY&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Hyperbolic?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Poor_dis">
-      <value value="0.24"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Subsidy">
-      <value value="9600"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Hyperbolic_rate">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Government_dis">
-      <value value="0.139"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Government_Strategy">
-      <value value="&quot;One-time-Subsidy&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Normal_dis">
-      <value value="0.09"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Flood_Height_Meters">
-      <value value="1.84"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="House_Price_Cutoff">
-      <value value="389000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Period">
-      <value value="99"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Threshold">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="MHHW_Meters">
-      <value value="2.543"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Moving_Cost_Multiplier">
-      <value value="4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Fix_benefit">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Flood_type">
-      <value value="&quot;100_year&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="MSL_Meters">
-      <value value="1.785"/>
-    </enumeratedValueSet>
+    <metric>OBJECTIVE</metric>
+    <steppedValueSet variable="Subsidy" first="10000" step="10000" last="100000"/>
+    <steppedValueSet variable="Moving_Cost_Multiplier" first="1" step="1" last="2"/>
   </experiment>
 </experiments>
 @#$#@#$#@
