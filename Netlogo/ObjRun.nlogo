@@ -178,9 +178,9 @@ to Update_coefficient_TOTAL
     loop [
       if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
                                           ;; set different cumulative future loss
-      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
-      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis  ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
-      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter) * ( item ( iter + TIME + 1) PROB_10Y_LIST )))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis  ) ^ iter ) * ( item ( iter + TIME + 1 ) PROB_10Y_LIST )))
+      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME + 1) PROB_10Y_LIST )))
       set iter iter + 1
       ;;show TOTAL  ;; show to check calculation
     ]
@@ -189,9 +189,9 @@ to Update_coefficient_TOTAL
     loop [
       if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
                                           ;; set different cumulative future loss
-      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_100Y_LIST ) ))
-      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis  ) ^ iter ) * ( item ( iter + TIME ) PROB_100Y_LIST ) ))
-      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_100Y_LIST ) ))
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME + 1) PROB_100Y_LIST ) ))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis  ) ^ iter ) * ( item ( iter + TIME + 1 ) PROB_100Y_LIST ) ))
+      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME  + 1) PROB_100Y_LIST ) ))
       set iter iter + 1
       ;;show TOTAL  ;; show to check calculation
     ]
@@ -200,12 +200,12 @@ to Update_coefficient_TOTAL
     loop [
       if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
                                           ;; set different cumulative future loss
-      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_LIST ) ))
-      set TOTAL replace-item 3 TOTAL ( ( item 3 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
-      set TOTAL replace-item 4 TOTAL ( ( item 4 TOTAL) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
-      set TOTAL replace-item 5 TOTAL ( ( item 5 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME + 1 ) PROB_LIST ) ))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter + TIME + 1) PROB_LIST ) ))
+      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter ) * ( item ( iter + TIME + 1) PROB_LIST ) ))
+      set TOTAL replace-item 3 TOTAL ( ( item 3 TOTAL) + ( 1 / (( 1 + Normal_dis ) ^ iter ) * ( item ( iter + TIME + 1 ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 4 TOTAL ( ( item 4 TOTAL) + ( 1 / (( 1 + Poor_dis ) ^ iter ) * ( item ( iter + TIME + 1 ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 5 TOTAL ( ( item 5 TOTAL) + ( 1 / (( 1 + Government_dis ) ^ iter) ) * ( item ( iter + TIME  + 1 ) PROB_10Y_LIST ) )
       set iter iter + 1
       ;;show TOTAL  ;; show to check calculation
     ]
@@ -232,13 +232,13 @@ to Update_values ;; Function to update values for agent
   if breed = poors
   [
     if Flood_type = "10_year"[
-    set Future_loss (item 1 TOTAL)  * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
+    set Future_loss (item 1 TOTAL)  * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y / 2)
     ]
     if Flood_type = "100_year"[
-    set Future_loss (item 2 TOTAL) * (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y)
+    set Future_loss (item 1 TOTAL) * (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y / 2)
     ]
     if Flood_type = "Multiple"[
-    set Future_loss (((item 4 TOTAL) * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 1 TOTAL) *  (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))))
+    set Future_loss (((item 4 TOTAL) * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y / 2) + ((item 1 TOTAL) *  (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y / 2 ))))
     ]
   ]
 end
@@ -264,8 +264,6 @@ to Ori_change_color
       ]
     ]
 end
-
-
 to Change_color
   ;; if moving cost plus pv of subsidy is greater than future loss then residents will move
   if breed = normals[
@@ -300,15 +298,15 @@ to Change_color
         set moved? True ;; resident has moved
         set Mot_year TIME
         if Flood_type = "Multiple"[
-        set OBJECTIVE OBJECTIVE +  ((item 2 PAST_LOSS )*(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + (item 5 PAST_LOSS )* (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
+        set OBJECTIVE OBJECTIVE +  ((item 2 PAST_LOSS )*(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y / 2) + (item 5 PAST_LOSS )* (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y / 2))
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
           ]
         if Flood_type = "100_year" [
-        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y)
+        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y / 2)
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
           ]
         if Flood_type = "10_year" [
-        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
+        set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y / 2)
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
           ]
        ]
@@ -319,7 +317,7 @@ to Change_color
 end
 to Input_10Y_flood_data ;; function to plug in flood probability data
   ;; initilize PROB_LIST and read probability data from outside source
-  set PROB_10Y_LIST []
+  set PROB_10Y_LIST [ 0 ]
   file-close
   file-open "data/10_NY_4.5.csv"
   ;let iter 0
@@ -334,7 +332,7 @@ to Input_10Y_flood_data ;; function to plug in flood probability data
   file-close
 end
 to Input_100Y_flood_data
-  set PROB_100Y_LIST []
+  set PROB_100Y_LIST [ 0 ]
   file-close
   file-open "data/100_NY_4.5.csv"
   ;let iter 0
@@ -349,7 +347,7 @@ to Input_100Y_flood_data
   file-close
 end
 to Input_Mulitple
-  set PROB_LIST []
+  set PROB_LIST [ 0 ]
   let iter 0
   let len length PROB_10Y_LIST
   loop [
@@ -373,9 +371,9 @@ to write_data
 export-world "world2.csv"
 end
 to Initialize_list ;; function to initialize lists
-  set SUBSIDY_PV [] ;; initialize SUBSIDY_PV list
-  set TOTAL [] ;; initialize TOTAL list
-  set PAST_LOSS [] ;; initialize PAST list
+  set SUBSIDY_PV [] ;; initialize SUBSIDY_PV list help calculate gov's objective function
+  set TOTAL [] ;; initialize TOTAL list residents future loss
+  set PAST_LOSS [] ;; initialize PAST list help calculate gov's objective function
   let iter 0
   set CLASS 6
   loop [
@@ -387,7 +385,7 @@ to Initialize_list ;; function to initialize lists
   ]
 end
 to Inundation_property_damage_cost
-
+  set Cost_to_personal_property_10Y 0
   if Inundation_10Y > 0 and Inundation_10Y <= 2
   [ set Cost_to_personal_property_10Y 3172]
   if Inundation_10Y > 2 and Inundation_10Y <= 3
@@ -416,7 +414,7 @@ to Inundation_property_damage_cost
   [ set Cost_to_personal_property_10Y 46633]
   if Inundation_10Y > 36
   [ set Cost_to_personal_property_10Y 50000]
-
+  set Cost_to_personal_property_100Y 0
   if Inundation_100Y > 0 and Inundation_100Y <= 2
   [ set Cost_to_personal_property_100Y 3172]
   if Inundation_100Y > 2 and Inundation_100Y <= 3
@@ -448,17 +446,17 @@ to Inundation_property_damage_cost
 end
 to Damage_structure_pct_conditions
   if Stories = 1 and Basement = ""
-  [ Damage_percentage_onestory_basement ]
-  if Stories != 1 and Basement = ""
-  [ Damage_percentage_morethanonestory_basement ]
-  if Stories = 1 and Basement != ""
   [ Damage_percentage_onestory_nobasement ]
-  if Stories != 1 and Basement != ""
+  if Stories != 1 and Basement = ""
   [ Damage_percentage_morethanonestory_nobasement ]
+  if Stories = 1 and Basement != ""
+  [ Damage_percentage_onestory_basement ]
+  if Stories != 1 and Basement != ""
+  [ Damage_percentage_morethanonestory_basement ]
 
 end
 to Damage_percentage_onestory_basement
-
+  set Damage_pct_10Y 0
   if Inundation_10Y > 0 and Inundation_10Y <= 1
   [set Damage_pct_10Y 0.32]
   if Inundation_10Y > 1 and Inundation_10Y <= 2
@@ -482,6 +480,7 @@ to Damage_percentage_onestory_basement
   if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct_10Y 0.811]
 
+  set Damage_pct_100Y 0
   if Inundation_100Y > 0 and Inundation_100Y <= 1
   [set Damage_pct_100Y 0.32]
   if Inundation_100Y > 1 and Inundation_100Y <= 2
@@ -497,7 +496,7 @@ to Damage_percentage_onestory_basement
   if Inundation_100Y > 6 and Inundation_100Y <= 7
   [set Damage_pct_100Y 0.698]
   if Inundation_100Y > 7 and Inundation_100Y <= 8
-  [set Damage_pct_10Y 0.742]
+  [set Damage_pct_100Y 0.742]
   if Inundation_100Y > 8 and Inundation_100Y <= 9
   [set Damage_pct_100Y 0.777]
   if Inundation_100Y > 9 and Inundation_100Y <= 10
@@ -506,7 +505,7 @@ to Damage_percentage_onestory_basement
   [set Damage_pct_100Y 0.811]
 end
 to Damage_percentage_morethanonestory_basement
-
+  set Damage_pct_10Y 0
   if Inundation_10Y > 0 and Inundation_10Y <= 1
   [set Damage_pct_10Y 0.223]
   if Inundation_10Y > 1 and Inundation_10Y <= 2
@@ -530,6 +529,7 @@ to Damage_percentage_morethanonestory_basement
   if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct_10Y 0.684]
 
+  set Damage_pct_100Y 0
   if Inundation_100Y > 0 and Inundation_100Y <= 1
   [set Damage_pct_100Y 0.223]
   if Inundation_100Y > 1 and Inundation_100Y <= 2
@@ -554,7 +554,7 @@ to Damage_percentage_morethanonestory_basement
   [set Damage_pct_100Y 0.684]
 end
 to Damage_percentage_onestory_nobasement
-
+  set Damage_pct_10Y 0
   if Inundation_10Y > 0 and Inundation_10Y <= 1
   [set Damage_pct_10Y 0.233]
   if Inundation_10Y > 1 and Inundation_10Y <= 2
@@ -578,6 +578,7 @@ to Damage_percentage_onestory_nobasement
   if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct_10Y 0.754]
 
+  set Damage_pct_100Y 0
   if Inundation_100Y > 0 and Inundation_100Y <= 1
   [set Damage_pct_100Y 0.233]
   if Inundation_100Y > 1 and Inundation_100Y <= 2
@@ -589,7 +590,7 @@ to Damage_percentage_onestory_nobasement
   if Inundation_100Y > 4 and Inundation_100Y <= 5
   [set Damage_pct_100Y 0.532]
   if Inundation_100Y > 5 and Inundation_100Y <= 6
-  [set Damage_pct_10Y 0.586]
+  [set Damage_pct_100Y 0.586]
   if Inundation_100Y > 6 and Inundation_100Y <= 7
   [set Damage_pct_100Y 0.632]
   if Inundation_100Y > 7 and Inundation_100Y <= 8
@@ -602,7 +603,7 @@ to Damage_percentage_onestory_nobasement
   [set Damage_pct_100Y 0.754]
 end
 to Damage_percentage_morethanonestory_nobasement
-
+  set Damage_pct_10Y 0
   if Inundation_10Y > 0 and Inundation_10Y <= 1
   [set Damage_pct_10Y 0.152]
   if Inundation_10Y > 1 and Inundation_10Y <= 2
@@ -626,6 +627,7 @@ to Damage_percentage_morethanonestory_nobasement
   if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct_10Y 0.587]
 
+  set Damage_pct_100Y 0
   if Inundation_100Y > 0 and Inundation_100Y <= 1
   [set Damage_pct_100Y 0.152]
   if Inundation_100Y > 1 and Inundation_100Y <= 2
@@ -641,7 +643,7 @@ to Damage_percentage_morethanonestory_nobasement
   if Inundation_100Y > 6 and Inundation_100Y <= 7
   [set Damage_pct_100Y 0.449]
   if Inundation_100Y > 7 and Inundation_100Y <= 8
-  [set Damage_pct_10Y 0.488]
+  [set Damage_pct_100Y 0.488]
   if Inundation_100Y > 8 and Inundation_100Y <= 9
   [set Damage_pct_100Y 0.524]
   if Inundation_100Y > 9 and Inundation_100Y <= 10
@@ -653,8 +655,8 @@ end
 GRAPHICS-WINDOW
 688
 10
-1027
-350
+1689
+1020
 -1
 -1
 0.1
@@ -801,7 +803,7 @@ Poor_dis
 Poor_dis
 0
 1
-0.19
+0.54
 0.01
 1
 NIL
@@ -888,7 +890,7 @@ CHOOSER
 Flood_type
 Flood_type
 "100_year" "10_year" "Multiple"
-2
+1
 
 PLOT
 8
