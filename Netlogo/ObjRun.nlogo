@@ -16,6 +16,7 @@ globals[
   SUBSIDY_PV ;; The present value of given subsidy
   CLASS
   OBJECTIVE ;; The global objective function
+  MOTIVATED ;; Number of people motivated by policy
 ]
 turtles-own[
   Latitude
@@ -35,6 +36,9 @@ turtles-own[
   Damage_pct_10Y
   Damage_pct_100Y
   Moved?
+  Mot_year
+  Ori_moved?
+  Ori_year
 ]
 to Clear
   clear-all
@@ -53,8 +57,8 @@ to Setup
   set MHHW MHHW_Meters
   set MSL MSL_Meters
   set TIME 0
-  set GEODATASET gis:load-dataset "data/Export_Output_2.shp"
-  ;set GEODATASET gis:load-dataset "data/NY11234-11236.shp"
+  ;set GEODATASET gis:load-dataset "data/Export_Output_2.shp"
+  set GEODATASET gis:load-dataset "data/NY11234-11236.shp"
   ; Set the world envelope to the union of all of our dataset's envelopes
   gis:set-world-envelope (gis:envelope-union-of (gis:envelope-of GEODATASET))
   ; show gis:envelope-of GEODATASET
@@ -73,11 +77,16 @@ to Go
 
   ask turtles [
     Update_values   ;; update values for every agent
+    Ori_change_color ;; change color if agents original moved in this year
     Change_color ;; change color if agents moved in this year
   ]
+
+  set MOTIVATED count (turtles with [Mot_year != Ori_year])
   set TIME TIME + 1 ;; add time
   tick
+
 end
+
 to House_property
   foreach gis:feature-list-of GEODATASET [ vector-feature ->
     ;show vector-feature
@@ -97,11 +106,11 @@ to House_property
       set size 5
       set color (5 + floor (gis:property-value vector-feature "TOTALMARKE" / 200000 ) * 10)
       ;set color (13 + floor (gis:property-value vector-feature "TOTALMARKE" / 20000 ) * 0.01)
-      set Inundation_10Y ceiling((Flood_Height_10Y - MHHW - MSL - Elevation) * 39.3701)
-      set Inundation_100Y ceiling((Flood_Height_100Y - MHHW - MSL - Elevation) * 39.3701)
-      if Inundation_10Y < 0
+      set Inundation_10Y ceiling((Flood_Height_10Y + MHHW - Elevation) * 39.3701)
+      set Inundation_100Y ceiling((Flood_Height_100Y + MHHW  - Elevation) * 39.3701)
+      if Inundation_10Y <= 0
         [ set Inundation_10Y 0 ]
-      if Inundation_100Y < 0
+      if Inundation_100Y <= 0
         [ set Inundation_100Y 0 ]
       Inundation_property_damage_cost
       Setting_agents
@@ -119,7 +128,10 @@ to Setting_agents
     set shape "circle"
     ;set color red
   ]
-  set moved? false
+  set  Moved? false
+  set  Ori_moved? false
+  set  Ori_year 200
+  set  Mot_year 200
   Damage_structure_pct_conditions ;; set expected loss for the future standing at year one and update at every tick
 end
 to Update_coefficient_PAST
@@ -230,25 +242,51 @@ to Update_values ;; Function to update values for agent
     ]
   ]
 end
+
+to Ori_change_color
+  if breed = normals[
+    if Government_strategy = "One-time-Subsidy" [
+      if Total_market_value  * Moving_Cost_Multiplier <= Future_loss [
+        if Ori_moved? = False [
+          set Ori_moved? True
+          set Ori_year TIME
+        ]
+       ]
+    ]
+  ]
+
+  if breed = poors[
+    if Total_market_value  * Moving_Cost_Multiplier  <= Future_loss [
+       if Ori_moved? = False [
+          set Ori_moved? True
+          set Ori_year TIME
+        ]
+      ]
+    ]
+end
+
+
 to Change_color
   ;; if moving cost plus pv of subsidy is greater than future loss then residents will move
   if breed = normals[
     if Government_strategy = "One-time-Subsidy" [
-      if Total_market_value  * Moving_Cost_Multiplier - Subsidy - Future_loss <= threshold [
+      if Total_market_value * Moving_Cost_Multiplier - Subsidy - Future_loss <= threshold  [
         if moved? = False [
+        ;;; set new_move_year ticks
         set color color + 4  ;; change color to red if moved
-        set moved? True ;; resident has moved
+        set Moved? True ;; resident has moved
+        set Mot_year TIME
         if Flood_type = "Multiple"[
         set OBJECTIVE OBJECTIVE + (item 2 PAST_LOSS )*((Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + (item 5 PAST_LOSS )* (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
-        set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
+        ;set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
           ]
         if Flood_type = "100_year" [
         set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y)
-        set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
+        ;set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
           ]
         if Flood_type = "10_year" [
         set OBJECTIVE OBJECTIVE +  (item 2 PAST_LOSS )*(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
-        set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
+        ;set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
           ]
       ]
     ]
@@ -260,6 +298,7 @@ to Change_color
         if moved? = False [
         set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
+        set Mot_year TIME
         if Flood_type = "Multiple"[
         set OBJECTIVE OBJECTIVE +  ((item 2 PAST_LOSS )*(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + (item 5 PAST_LOSS )* (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))
         set OBJECTIVE OBJECTIVE +  (item 2 SUBSIDY_PV )
@@ -323,11 +362,15 @@ to Input_Mulitple
   ]
 end
 to Hide_moved
+  ;set MOTIVATED count (turtles with [Mot_year != Ori_year])
   set hidden? True
-  if moved? = False[
+  if Mot_year != Ori_year[
     set hidden? False
     set size 15
   ]
+end
+to write_data
+export-world "world2.csv"
 end
 to Initialize_list ;; function to initialize lists
   set SUBSIDY_PV [] ;; initialize SUBSIDY_PV list
@@ -344,7 +387,8 @@ to Initialize_list ;; function to initialize lists
   ]
 end
 to Inundation_property_damage_cost
-  if Inundation_10Y <= 2
+
+  if Inundation_10Y > 0 and Inundation_10Y <= 2
   [ set Cost_to_personal_property_10Y 3172]
   if Inundation_10Y > 2 and Inundation_10Y <= 3
   [ set Cost_to_personal_property_10Y 4917]
@@ -372,7 +416,8 @@ to Inundation_property_damage_cost
   [ set Cost_to_personal_property_10Y 46633]
   if Inundation_10Y > 36
   [ set Cost_to_personal_property_10Y 50000]
-  if Inundation_100Y <= 2
+
+  if Inundation_100Y > 0 and Inundation_100Y <= 2
   [ set Cost_to_personal_property_100Y 3172]
   if Inundation_100Y > 2 and Inundation_100Y <= 3
   [ set Cost_to_personal_property_100Y 4917]
@@ -413,8 +458,7 @@ to Damage_structure_pct_conditions
 
 end
 to Damage_percentage_onestory_basement
-  if Inundation_10Y <= 0
-  [set Damage_pct_10Y 0.255]
+
   if Inundation_10Y > 0 and Inundation_10Y <= 1
   [set Damage_pct_10Y 0.32]
   if Inundation_10Y > 1 and Inundation_10Y <= 2
@@ -437,8 +481,7 @@ to Damage_percentage_onestory_basement
   [set Damage_pct_10Y 0.801]
   if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct_10Y 0.811]
-  if Inundation_100Y <= 0
-  [set Damage_pct_100Y 0.255]
+
   if Inundation_100Y > 0 and Inundation_100Y <= 1
   [set Damage_pct_100Y 0.32]
   if Inundation_100Y > 1 and Inundation_100Y <= 2
@@ -463,8 +506,7 @@ to Damage_percentage_onestory_basement
   [set Damage_pct_100Y 0.811]
 end
 to Damage_percentage_morethanonestory_basement
-  if Inundation_10Y <= 0
-  [set Damage_pct_10Y 0.179]
+
   if Inundation_10Y > 0 and Inundation_10Y <= 1
   [set Damage_pct_10Y 0.223]
   if Inundation_10Y > 1 and Inundation_10Y <= 2
@@ -487,8 +529,7 @@ to Damage_percentage_morethanonestory_basement
   [set Damage_pct_10Y 0.648]
   if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct_10Y 0.684]
-  if Inundation_100Y <= 0
-  [set Damage_pct_100Y 0.179]
+
   if Inundation_100Y > 0 and Inundation_100Y <= 1
   [set Damage_pct_100Y 0.223]
   if Inundation_100Y > 1 and Inundation_100Y <= 2
@@ -513,8 +554,7 @@ to Damage_percentage_morethanonestory_basement
   [set Damage_pct_100Y 0.684]
 end
 to Damage_percentage_onestory_nobasement
-  if Inundation_10Y <= 0
-  [set Damage_pct_10Y 0.134]
+
   if Inundation_10Y > 0 and Inundation_10Y <= 1
   [set Damage_pct_10Y 0.233]
   if Inundation_10Y > 1 and Inundation_10Y <= 2
@@ -537,8 +577,7 @@ to Damage_percentage_onestory_nobasement
   [set Damage_pct_10Y 0.732]
   if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct_10Y 0.754]
-  if Inundation_100Y <= 0
-  [set Damage_pct_100Y 0.134]
+
   if Inundation_100Y > 0 and Inundation_100Y <= 1
   [set Damage_pct_100Y 0.233]
   if Inundation_100Y > 1 and Inundation_100Y <= 2
@@ -563,8 +602,7 @@ to Damage_percentage_onestory_nobasement
   [set Damage_pct_100Y 0.754]
 end
 to Damage_percentage_morethanonestory_nobasement
-  if Inundation_10Y <= 0
-  [set Damage_pct_10Y 0.093]
+
   if Inundation_10Y > 0 and Inundation_10Y <= 1
   [set Damage_pct_10Y 0.152]
   if Inundation_10Y > 1 and Inundation_10Y <= 2
@@ -587,8 +625,7 @@ to Damage_percentage_morethanonestory_nobasement
   [set Damage_pct_10Y 0.557]
   if Inundation_10Y > 10                     ;Inundation > 10 consider the same high damage to the house
   [set Damage_pct_10Y 0.587]
-  if Inundation_100Y <= 0
-  [set Damage_pct_100Y 0.093]
+
   if Inundation_100Y > 0 and Inundation_100Y <= 1
   [set Damage_pct_100Y 0.152]
   if Inundation_100Y > 1 and Inundation_100Y <= 2
@@ -614,13 +651,13 @@ to Damage_percentage_morethanonestory_nobasement
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-689
+688
 10
-1690
-1020
+1027
+350
 -1
 -1
-0.99201
+0.1
 1
 10
 1
@@ -634,8 +671,8 @@ GRAPHICS-WINDOW
 0
 0
 1000
-0
-0
+1
+1
 1
 ticks
 60.0
@@ -764,7 +801,7 @@ Poor_dis
 Poor_dis
 0
 1
-0.18
+0.19
 0.01
 1
 NIL
@@ -805,7 +842,7 @@ Subsidy
 Subsidy
 0
 1000000
-439500.0
+222900.0
 100
 1
 NIL
@@ -905,7 +942,7 @@ INPUTBOX
 667
 129
 Moving_Cost_Multiplier
-5.0
+3.0
 1
 0
 Number
@@ -1006,6 +1043,34 @@ Flood_Height_Meters_100Y
 1
 0
 Number
+
+MONITOR
+154
+645
+297
+690
+Per
+MOTIVATED / count turtles
+17
+1
+11
+
+BUTTON
+249
+15
+344
+48
+NIL
+write_data
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1358,8 +1423,8 @@ NetLogo 6.1.1
     <setup>setup</setup>
     <go>go</go>
     <metric>OBJECTIVE</metric>
-    <steppedValueSet variable="Subsidy" first="10000" step="10000" last="100000"/>
-    <steppedValueSet variable="Moving_Cost_Multiplier" first="1" step="1" last="2"/>
+    <steppedValueSet variable="Subsidy" first="0" step="10000" last="100000"/>
+    <steppedValueSet variable="Moving_Cost_Multiplier" first="4" step="0.1" last="6"/>
   </experiment>
 </experiments>
 @#$#@#$#@
