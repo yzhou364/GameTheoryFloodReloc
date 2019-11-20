@@ -1425,8 +1425,13 @@ NetLogo 6.1.1
     <setup>setup</setup>
     <go>go</go>
     <metric>OBJECTIVE</metric>
+<<<<<<< HEAD
     <steppedValueSet variable="Subsidy" first="0" step="10000" last="100000"/>
     <steppedValueSet variable="Moving_Cost_Multiplier" first="4" step="0.1" last="6"/>
+=======
+    <steppedValueSet variable="Subsidy" first="0" step="10000" last="1000000"/>
+    <steppedValueSet variable="Moving_Cost_Multiplier" first="7" step="0.1" last="9"/>
+>>>>>>> e0ddb35658342f284645e90839fbeed0647ba394
   </experiment>
 </experiments>
 @#$#@#$#@
