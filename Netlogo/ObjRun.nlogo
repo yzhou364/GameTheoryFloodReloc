@@ -655,8 +655,8 @@ end
 GRAPHICS-WINDOW
 689
 10
-1193
-515
+1690
+1020
 -1
 -1
 0.3
@@ -1066,35 +1066,93 @@ NIL
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+This model was built to demonstrate the effects of 10-year, 100-year, and multiple inundation flood plain on a number of households who moved, and govenment objective function based on different variables given to the model.
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+This model imports CSV file to take data about the housing information. Also it loads GIS dataset to locate the relative location on the interface. 
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+Select the location, flood type, government strategy, then click setup to loads the housign data into the model. Click run to see how each household makes decision based on the default variables. Make any adjustments to the variables, for example increased subsidy, to see different results.  
 
 ## THINGS TO NOTICE
+This model only show selected zipcodes for studied states. 
 
-(suggested things for the user to notice while running the model)
+Normal-income households represent by triangle turtles
+Poor-income households represent by circle turtles
+Furthermore, each household will be color-coded based on the range of its house price. These ranges can be adjusted.
+
+House Price Cutoff is the variable (house price) that will differentiate normal-income household from low-income household. This variable is currently done manually by inspecting the real data.
+
+Hide Moved will make any turtle whose motivated moving year the same as its' orginal moving year. ?????? 
 
 ## THINGS TO TRY
 
 (suggested things for the user to try to do (move sliders, switches, etc.) with the model)
 
-## EXTENDING THE MODEL
+## EXPLAINING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+This section will explain the details and logics of each function.
+
+Setup
+	This function loads the data by calling other functions into the interface, sets the global variables from the inputs, and presents the house at a location based on the GIS map.
+
+Go
+	For each TIME (year), each household will be updated with its' past loss, future loss, and subsidy in terms of present value until the household decides to move or it reaches year 100th.
+
+House property
+	This function called by Setup. It will set data to each turtle. Meters of innundation will be calulated from input data, then will be converted to inches. 
+
+Setting agents
+	Dividing turtles into low-income and normal-income breed. Initializing the turtles to be not moved. Also assigning damage percentage by calling other functions.
+
+Update coefficient past
+	To calculate past loss using a loop logic (for govenment's objective function). For each TIME period, the loop will end when calculating the past loss up to one year before. For example, we are at year 5, the past will be calculate from year 0 to 4.   
+
+Update_coefficient_TOTAL
+	To calculate future loss using a loop logic (for household's decision). For each TIME period, the loop will end when calculating the future loss from the next year until the end of the period(100). For example, we are at year 5, the future will be calculate from year 6 to 100.
+
+Update_coefficient_SUBSIDY_PV 
+	This function calculate present value of subsidy for low-income, normal-income,and government in every year, then place the values in a list. 
+
+Update_values
+	This function updates future loss for the turtles who do not move. For low-income, the cost to personal property is set to be half of the normal-income for the purposeod this study.
+
+Change_color
+*This model only built with One-time-Subsidy as a government strategy.
+	This function will distinguish which house decides to move by changing to a lighter color. Further, it shows the moved year of each turtle, and the objective value for the govenrment.  
+
+Input_10Y_flood_data and Input_100Y_flood_data
+	These two functions are similar. They loads the flood probability and puts in a list 
+
+Input_Multiple
+	The flood probability is calculated by taking out 10-year from 100-year flood probability before creating a list. This step will avoid double counting two flood probability.
+
+Hide_moved
+	Hide Moved will make any turtle whose motivated moving year the same as its' orginal moving year. ??????
+
+Initialize_list
+	This function initializes lists including present value of Subsidy, future loss, and past loss.
+
+Inundation_property_damage_cost
+ 	This if-function assign cost to personal property to each turtle based on its' inundation level and type of flood.
+
+Damage_structure_pct_conditions
+	A connecting function that type of houses to the corresponding damage percentage.
+
+Damage_percentage
+	Assigning damage percentage to the turtles based on the previous called "Damage_structure_pct_conditions" function.
+ 
+  
 
 ## NETLOGO FEATURES
 
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
+NETLOGO has an interesting feature named "Behavior Space". Access via Tools, then click BehaviorSpace. This allows user to run sensitivty analysis and exports as a data file. For example, user can set the BehaviorSpace to run a range of subsidy and obtain the result of government's objective function for further analysis. 
 
 ## RELATED MODELS
 
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+This model mimics the NetLogo Models Library named "GIS General Examples" to loads the world maps into the interface. This function helps represent close to the real location using the latitude and longitude to the world map.
 
 ## CREDITS AND REFERENCES
 
