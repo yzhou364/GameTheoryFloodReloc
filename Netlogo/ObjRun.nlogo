@@ -653,13 +653,13 @@ to Damage_percentage_morethanonestory_nobasement
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-688
+689
 10
-1689
-1020
+1297
+619
 -1
 -1
-0.1
+0.6
 1
 10
 1
@@ -673,8 +673,8 @@ GRAPHICS-WINDOW
 0
 0
 1000
-1
-1
+0
+0
 1
 ticks
 60.0
@@ -803,7 +803,7 @@ Poor_dis
 Poor_dis
 0
 1
-0.54
+0.18
 0.01
 1
 NIL
@@ -844,7 +844,7 @@ Subsidy
 Subsidy
 0
 1000000
-222900.0
+439500.0
 100
 1
 NIL
@@ -890,7 +890,7 @@ CHOOSER
 Flood_type
 Flood_type
 "100_year" "10_year" "Multiple"
-1
+2
 
 PLOT
 8
@@ -944,7 +944,7 @@ INPUTBOX
 667
 129
 Moving_Cost_Multiplier
-3.0
+5.0
 1
 0
 Number
@@ -1046,24 +1046,13 @@ Flood_Height_Meters_100Y
 0
 Number
 
-MONITOR
-154
-645
-297
-690
-Per
-MOTIVATED / count turtles
-17
-1
-11
-
 BUTTON
-249
-15
-344
-48
+254
+16
+346
+49
 NIL
-write_data
+write_data\n
 NIL
 1
 T
@@ -1425,13 +1414,8 @@ NetLogo 6.1.1
     <setup>setup</setup>
     <go>go</go>
     <metric>OBJECTIVE</metric>
-<<<<<<< HEAD
-    <steppedValueSet variable="Subsidy" first="0" step="10000" last="100000"/>
-    <steppedValueSet variable="Moving_Cost_Multiplier" first="4" step="0.1" last="6"/>
-=======
     <steppedValueSet variable="Subsidy" first="0" step="10000" last="1000000"/>
     <steppedValueSet variable="Moving_Cost_Multiplier" first="7" step="0.1" last="9"/>
->>>>>>> e0ddb35658342f284645e90839fbeed0647ba394
   </experiment>
 </experiments>
 @#$#@#$#@
