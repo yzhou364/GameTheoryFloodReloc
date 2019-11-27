@@ -17,6 +17,7 @@ globals[
   CLASS
   OBJECTIVE ;; The global objective function
   MOTIVATED ;; Number of people motivated by policy
+  SUBSIDY_HYPERBOLIC
 ]
 turtles-own[
   Latitude
@@ -174,6 +175,44 @@ end
 to Update_coefficient_TOTAL
   ;; coefficient of expected future loss
   let iter 0
+  if Hyperbolic? [
+  if Flood_type = "10_year"[
+    loop [
+      if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
+                                          ;; set different cumulative future loss
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1) PROB_10Y_LIST )))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1 ) PROB_10Y_LIST )))
+      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1) PROB_10Y_LIST )))
+      set iter iter + 1
+      ;;show TOTAL  ;; show to check calculation
+    ]
+  ]
+  if Flood_type = "100_year"[
+    loop [
+      if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
+                                          ;; set different cumulative future loss
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1) PROB_100Y_LIST ) ))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1 ) PROB_100Y_LIST ) ))
+      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME  + 1) PROB_100Y_LIST ) ))
+      set iter iter + 1
+      ;;show TOTAL  ;; show to check calculation
+    ]
+  ]
+  if Flood_type = "Multiple"[
+    loop [
+      if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
+                                          ;; set different cumulative future loss
+      set TOTAL replace-item 0 TOTAL ( ( item 0 TOTAL) + ( 1 / (( 1 + Normal_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1 ) PROB_LIST ) ))
+      set TOTAL replace-item 1 TOTAL ( ( item 1 TOTAL) + ( 1 / (( 1 + Poor_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1) PROB_LIST ) ))
+      set TOTAL replace-item 2 TOTAL ( ( item 2 TOTAL) + ( 1 / (( 1 + Government_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1) PROB_LIST ) ))
+      set TOTAL replace-item 3 TOTAL ( ( item 3 TOTAL) + ( 1 / (( 1 + Normal_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1 ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 4 TOTAL ( ( item 4 TOTAL) + ( 1 / (( 1 + Poor_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME + 1 ) PROB_10Y_LIST ) ))
+      set TOTAL replace-item 5 TOTAL ( ( item 5 TOTAL) + ( 1 / (( 1 + Government_dis + Hyperbolic_rate * (iter - TIME)) ^ (iter - TIME)) * ( item ( iter + TIME  + 1 ) PROB_10Y_LIST ) ))
+      set iter iter + 1
+      ;;show TOTAL  ;; show to check calculation
+    ]
+  ]
+  ]
   if Flood_type = "10_year"[
     loop [
       if iter >= (Period - TIME) [ stop ] ;; stop condition is range out of period
@@ -215,24 +254,26 @@ to Update_coefficient_SUBSIDY_PV    ;; function to update one-time subsidy
   set SUBSIDY_PV replace-item 0 SUBSIDY_PV ( Subsidy / ( 1 + Normal_dis ) ^ TIME )
   set SUBSIDY_PV replace-item 1 SUBSIDY_PV ( Subsidy / ( 1 + Poor_dis ) ^ TIME )
   set SUBSIDY_PV replace-item 2 SUBSIDY_PV ( Subsidy / ( 1 + Government_dis) ^ TIME )
+
 end
+
 to Update_values ;; Function to update values for agent
   if breed = normals
   [
     if Flood_type = "10_year"[
-    set Future_loss (item 0 TOTAL)  *(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
+    set Future_loss (item 0 TOTAL) * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
     ]
     if Flood_type = "100_year"[
     set Future_loss (item 0 TOTAL) * (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y)
     ]
     if Flood_type = "Multiple"[
-      set Future_loss (((item 3 TOTAL) * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 0 TOTAL) *  (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))))
+    set Future_loss (((item 3 TOTAL) * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y) + ((item 0 TOTAL) *  (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y))))
   ]
   ]
   if breed = poors
   [
     if Flood_type = "10_year"[
-    set Future_loss (item 1 TOTAL)  * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y / 2)
+    set Future_loss (item 1 TOTAL) * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y / 2)
     ]
     if Flood_type = "100_year"[
     set Future_loss (item 1 TOTAL) * (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y / 2)
@@ -246,7 +287,7 @@ end
 to Ori_change_color
   if breed = normals[
     if Government_strategy = "One-time-Subsidy" [
-      if Total_market_value  * Moving_Cost_Multiplier <= Future_loss [
+      if Total_market_value  *  Moving_Cost_Multiplier <= Future_loss [
         if Ori_moved? = False [
           set Ori_moved? True
           set Ori_year TIME
@@ -256,7 +297,7 @@ to Ori_change_color
   ]
 
   if breed = poors[
-    if Total_market_value  * Moving_Cost_Multiplier  <= Future_loss [
+    if Total_market_value  *  Moving_Cost_Multiplier  <= Future_loss [
        if Ori_moved? = False [
           set Ori_moved? True
           set Ori_year TIME
@@ -374,6 +415,7 @@ to Initialize_list ;; function to initialize lists
   set SUBSIDY_PV [] ;; initialize SUBSIDY_PV list help calculate gov's objective function
   set TOTAL [] ;; initialize TOTAL list residents future loss
   set PAST_LOSS [] ;; initialize PAST list help calculate gov's objective function
+  set SUBSIDY_HYPERBOLIC []
   let iter 0
   set CLASS 6
   loop [
@@ -381,6 +423,7 @@ to Initialize_list ;; function to initialize lists
     set SUBSIDY_PV lput 0 SUBSIDY_PV
     set TOTAL lput 0 TOTAL
     set PAST_LOSS lput 0 PAST_LOSS
+    ;set SUBSIDY_HYPERBOLIC lput 0 SUBSIDY_HYPERBOLIC
     set iter iter + 1
   ]
 end
@@ -655,11 +698,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1690
-1020
+1094
+416
 -1
 -1
-0.3
+0.01
 1
 10
 1
@@ -844,7 +887,7 @@ Subsidy
 Subsidy
 0
 1000000
-300000.0
+0.0
 100
 1
 NIL
@@ -1064,6 +1107,99 @@ NIL
 1
 
 @#$#@#$#@
+## WHAT IS IT?
+
+This model was built to demonstrate the effects of 10-year, 100-year, and multiple inundation flood plain on a number of households who moved, and govenment objective function based on different variables given to the model.
+
+## HOW IT WORKS
+
+This model imports CSV file to take data about the housing information. Also it loads GIS dataset to locate the relative location on the interface. 
+
+## HOW TO USE IT
+
+Select the location, flood type, government strategy, then click setup to loads the housign data into the model. Click run to see how each household makes decision based on the default variables. Make any adjustments to the variables, for example increased subsidy, to see different results.  
+
+## THINGS TO NOTICE
+This model only show selected zipcodes for studied states. 
+
+Normal-income households represent by triangle turtles
+Poor-income households represent by circle turtles
+Furthermore, each household will be color-coded based on the range of its house price. These ranges can be adjusted.
+
+House Price Cutoff is the variable (house price) that will differentiate normal-income household from low-income household. This variable is currently done manually by inspecting the real data.
+
+Hide Moved will make any turtle whose motivated moving year the same as its' orginal moving year. ?????? 
+
+## THINGS TO TRY
+
+(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+
+## EXPLAINING THE MODEL
+
+This section will explain the details and logics of each function.
+
+Setup
+	This function loads the data by calling other functions into the interface, sets the global variables from the inputs, and presents the house at a location based on the GIS map.
+
+Go
+	For each TIME (year), each household will be updated with its' past loss, future loss, and subsidy in terms of present value until the household decides to move or it reaches year 100th.
+
+House property
+	This function called by Setup. It will set data to each turtle. Meters of innundation will be calulated from input data, then will be converted to inches. 
+
+Setting agents
+	Dividing turtles into low-income and normal-income breed. Initializing the turtles to be not moved. Also assigning damage percentage by calling other functions.
+
+Update coefficient past
+	To calculate past loss using a loop logic (for govenment's objective function). For each TIME period, the loop will end when calculating the past loss up to one year before. For example, we are at year 5, the past will be calculate from year 0 to 4.   
+
+Update_coefficient_TOTAL
+	To calculate future loss using a loop logic (for household's decision). For each TIME period, the loop will end when calculating the future loss from the next year until the end of the period(100). For example, we are at year 5, the future will be calculate from year 6 to 100.
+
+Update_coefficient_SUBSIDY_PV 
+	This function calculate present value of subsidy for low-income, normal-income,and government in every year, then place the values in a list. 
+
+Update_values
+	This function updates future loss for the turtles who do not move. For low-income, the cost to personal property is set to be half of the normal-income for the purposeod this study.
+
+Change_color
+*This model only built with One-time-Subsidy as a government strategy.
+	This function will distinguish which house decides to move by changing to a lighter color. Further, it shows the moved year of each turtle, and the objective value for the govenrment.  
+
+Input_10Y_flood_data and Input_100Y_flood_data
+	These two functions are similar. They loads the flood probability and puts in a list 
+
+Input_Multiple
+	The flood probability is calculated by taking out 10-year from 100-year flood probability before creating a list. This step will avoid double counting two flood probability.
+
+Hide_moved
+	Hide Moved will make any turtle whose motivated moving year the same as its' orginal moving year. ??????
+
+Initialize_list
+	This function initializes lists including present value of Subsidy, future loss, and past loss.
+
+Inundation_property_damage_cost
+ 	This if-function assign cost to personal property to each turtle based on its' inundation level and type of flood.
+
+Damage_structure_pct_conditions
+	A connecting function that type of houses to the corresponding damage percentage.
+
+Damage_percentage
+	Assigning damage percentage to the turtles based on the previous called "Damage_structure_pct_conditions" function.
+ 
+  
+
+## NETLOGO FEATURES
+
+NETLOGO has an interesting feature named "Behavior Space". Access via Tools, then click BehaviorSpace. This allows user to run sensitivty analysis and exports as a data file. For example, user can set the BehaviorSpace to run a range of subsidy and obtain the result of government's objective function for further analysis. 
+
+## RELATED MODELS
+
+This model mimics the NetLogo Models Library named "GIS General Examples" to loads the world maps into the interface. This function helps represent close to the real location using the latitude and longitude to the world map.
+
+## CREDITS AND REFERENCES
+
+(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
 @#$#@#$#@
 default
 true
