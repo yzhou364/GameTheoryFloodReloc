@@ -40,6 +40,8 @@ turtles-own[
   Mot_year
   Ori_moved?
   Ori_year
+
+  S_prime
 ]
 to Clear
   clear-all
@@ -102,7 +104,7 @@ to House_property
       set Stories gis:property-value vector-feature "NOOFSTORIE"
       set Basement gis:property-value vector-feature "STORYTYPES"
       set Total_market_value gis:property-value vector-feature "TOTALMARKE"
-      set Structure_value gis:property-value vector-feature "IMPROVEMEN"
+        set Structure_value gis:property-value vector-feature "IMPROVEMEN"
       set Sq.ft. gis:property-value vector-feature "SQUAREFEET"
       set size 5
       set color (5 + floor (gis:property-value vector-feature "TOTALMARKE" / 200000 ) * 10)
@@ -120,6 +122,7 @@ to House_property
   ]
 end
 to Setting_agents
+  set S_prime 1000000000000
   ifelse Total_market_value >= House_Price_Cutoff [
     set breed normals
     set shape "triangle"
@@ -310,7 +313,13 @@ to Change_color
   if breed = normals[
     if Government_strategy = "One-time-Subsidy" [
       if Total_market_value * Moving_Cost_Multiplier - Subsidy - Future_loss <= threshold  [
-        if moved? = False [
+        if Moved? = False [
+        if Total_market_value * Moving_Cost_Multiplier - Future_loss < S_prime [
+
+            set S_prime Total_market_value * Moving_Cost_Multiplier - Future_loss
+
+          ]
+
         ;;; set new_move_year ticks
         set color color + 4  ;; change color to red if moved
         set Moved? True ;; resident has moved
@@ -335,6 +344,16 @@ to Change_color
     if Government_strategy = "One-time-Subsidy" [
       if Total_market_value * Moving_Cost_Multiplier - Subsidy - Future_loss <= threshold [
         if moved? = False [
+
+         if Total_market_value * Moving_Cost_Multiplier - Future_loss < S_prime [
+
+            set S_prime Total_market_value * Moving_Cost_Multiplier - Future_loss
+
+          ]
+
+
+
+
         set color color + 4  ;; change color to red if moved
         set moved? True ;; resident has moved
         set Mot_year TIME
@@ -698,11 +717,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1094
-416
+1883
+1205
 -1
 -1
-0.01
+0.03
 1
 10
 1
@@ -859,7 +878,7 @@ SWITCH
 318
 Hyperbolic?
 Hyperbolic?
-1
+0
 1
 -1000
 
@@ -872,7 +891,7 @@ Hyperbolic_rate
 Hyperbolic_rate
 0
 1
-0.0
+0.12
 0.01
 1
 NIL
@@ -887,7 +906,7 @@ Subsidy
 Subsidy
 0
 1000000
-0.0
+10000.0
 100
 1
 NIL
@@ -987,7 +1006,7 @@ INPUTBOX
 667
 129
 Moving_Cost_Multiplier
-5.0
+2.7
 1
 0
 Number
@@ -1072,7 +1091,7 @@ Government_dis
 Government_dis
 0
 1
-0.025
+0.024
 0.001
 1
 NIL
@@ -1516,7 +1535,7 @@ NetLogo 6.1.1
     <go>go</go>
     <metric>OBJECTIVE</metric>
     <steppedValueSet variable="Subsidy" first="0" step="10000" last="1000000"/>
-    <steppedValueSet variable="Moving_Cost_Multiplier" first="7" step="0.1" last="9"/>
+    <steppedValueSet variable="Moving_Cost_Multiplier" first="1" step="0.1" last="3"/>
   </experiment>
 </experiments>
 @#$#@#$#@
