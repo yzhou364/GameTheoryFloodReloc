@@ -46,6 +46,7 @@ turtles-own[
   normal_inf?
   poor_inf?
   S_prime
+  nbpast_move  ;; acccount for how many neighbor houses have moved during the past year
 ]
 to Clear
   clear-all
@@ -82,18 +83,14 @@ to Go
   Update_coefficient_SUBSIDY_PV ;; update subsidy pv value
   Update_coefficient_PAST ;; update past loss
 
-  ask turtles [
+  ask turtles
+  [
     Update_values   ;; update values for every agent
     Ori_change_color ;; change color if agents original moved in this year
     Change_color ;; change color if agents moved in this year
+    set nbpast_move 0
     Influence
   ]
-;  ask normals [
-;    set normal_inf? false
-;  ]
-;  ask poors [
-;    set poor_inf? false
-;  ]
 
   set MOTIVATED count (turtles with [Mot_year != Ori_year])
   set TIME TIME + 1 ;; add time
@@ -101,60 +98,51 @@ to Go
 
 end
 
-;to influence1
-;  if breed = normals
-;  [
-;    set nearhouse min-n-of 5 normals [distance myself]
-;    ask nearhouse [
-;        set size 30
-;      ]
-;    ;set move count (nearhouse with [Moved? = true])
-;  ]
-;
-;end
-
-
-to Influence  ;;must go along with the running years
-  ;tick
+to Influence
   if breed = normals
-  ;ask normals
   [
-;;    set normal_inf? false
     if Moved? = false
-
     [
-      ;set shape "circle"
-      set nearhouse min-n-of 10 normals [distance myself]  ;; 4 neigbors
-      ;ask nearhouse [
-        ;set color white
-      ;]
+      set nearhouse min-n-of 10 normals [distance myself]  ;; 9 neigbors
+
       set move count (nearhouse with [Moved? = true])
-      if (move >= 3)     ; must add one (to not include myself who originally did not move)
+
+      ifelse (nbpast_move < move)     ; must add one (to not include myself who originally did not move)
       [
-        set Moved? true
-        set color pink
-        ;set size 30
-        set normal_inf? true
-        set Mot_year TIME
+        if random-float 100 < probability
+        [
+          set Moved? true
+          set color pink
+          set normal_inf? true
+          set Mot_year TIME
+        ]
+        set nbpast_move move
       ]
+      [set Moved? false]
     ]
   ]
+
+
   if breed = poors
-  ;ask poors
   [
-;    set poor_inf? false
-    if (Moved? = false and ori_moved? = false)
+    if (Moved? = false)
     [
       set nearhouse min-n-of 10 poors [distance myself] set color yellow
+
       set move count (nearhouse with [Moved? = true and ori_moved? = true])
-      if (move >= 3)
+
+      ifelse (nbpast_move < move)
       [
-        set Moved? true
-        set color pink
-        ;set size 30
-        set poor_inf? true
-        set Mot_year TIME
+        if random-float 100 < probability
+        [
+          set Moved? true
+          set color pink
+          set poor_inf? true
+          set Mot_year TIME
+        ]
+        set nbpast_move move
       ]
+      [set Moved? false]
     ]
   ]
 end
@@ -788,13 +776,13 @@ to Damage_percentage_morethanonestory_nobasement
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-689
-10
-1690
-1020
+711
+429
+1115
+834
 -1
 -1
-0.025
+0.01
 1
 10
 1
@@ -815,10 +803,10 @@ ticks
 60.0
 
 BUTTON
-333
-173
-399
-206
+529
+146
+595
+179
 NIL
 setup
 NIL
@@ -885,10 +873,10 @@ Government_Strategy
 0
 
 SLIDER
-138
-194
-310
-227
+196
+239
+368
+272
 Period
 Period
 0
@@ -900,10 +888,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-139
-238
-311
-271
+197
+283
+369
+316
 Fix_benefit
 Fix_benefit
 0
@@ -915,10 +903,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-140
-280
-312
-313
+198
+325
+370
+358
 Normal_dis
 Normal_dis
 0
@@ -930,10 +918,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-185
-330
-357
-363
+198
+374
+370
+407
 Poor_dis
 Poor_dis
 0
@@ -1001,10 +989,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-333
-215
-401
-248
+529
+188
+597
+221
 NIL
 Go
 T
@@ -1121,10 +1109,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count poors with[moved?] / count poors"
 
 BUTTON
-332
-263
-440
-296
+528
+236
+636
+269
 NIL
 Hide_moved
 NIL
@@ -1138,10 +1126,10 @@ NIL
 1
 
 PLOT
-453
-276
-648
-461
+8
+631
+203
+816
 Objective
 Time
 Objective
@@ -1156,15 +1144,15 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot OBJECTIVE"
 
 SLIDER
-451
-223
-623
-256
+197
+420
+369
+453
 Government_dis
 Government_dis
 0
 1
-0.036
+0.04
 0.001
 1
 NIL
@@ -1199,10 +1187,10 @@ NIL
 1
 
 PLOT
-689
-437
-975
-625
+223
+632
+509
+820
 Moved by influence
 Time
 House Moved by Influence
@@ -1216,6 +1204,21 @@ false
 PENS
 "default" 1.0 0 -4699768 true "" "plot count turtles with [normal_inf? = true]"
 "pen-1" 1.0 0 -14439633 true "" "plot count turtles with [poor_inf? = true]"
+
+SLIDER
+383
+421
+555
+454
+Probability
+Probability
+0
+100
+50.0
+0.01
+1
+%
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
