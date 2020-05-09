@@ -505,7 +505,7 @@ to Initialize_list ;; function to initialize lists
     set iter iter + 1
   ]
 end
-to Inundation_property_damage_cost
+to Inundation_property_damage_cost ;; PROBLEM
   set Cost_to_personal_property_10Y 0
   if Inundation_10Y > 0 and Inundation_10Y <= 2
   [ set Cost_to_personal_property_10Y 3172]
@@ -1212,7 +1212,7 @@ Probability
 Probability
 0
 100
-50.0
+0.0
 0.01
 1
 %
