@@ -154,6 +154,7 @@ to House_property
       ]
     ]
   ]
+
 end
 
 to Setting_agents
@@ -712,11 +713,11 @@ end
 GRAPHICS-WINDOW
 545
 10
-953
-419
+753
+219
 -1
 -1
-0.4
+0.2
 1
 10
 1
@@ -919,7 +920,7 @@ Subsidy
 Subsidy
 0
 1000000
-100000.0
+50000.0
 100
 1
 NIL
@@ -941,7 +942,7 @@ INPUTBOX
 162
 400
 Moving_Cost_Multiplier
-2.7
+1.5
 1
 0
 Number
@@ -1059,7 +1060,7 @@ Number
 0.0
 100.0
 0.0
-100.0
+10000.0
 true
 false
 "" ""
