@@ -72,20 +72,50 @@ end
 to Go
   ;; stop condition is that every agent has moved
   if TIME > 100 [ stop ]
+;
+;  Update_coefficient_TOTAL       ;; update values and coefficient in each tick
+;  ;Update_coefficient_SUBSIDY_PV ;; update subsidy pv value
+;  Update_coefficient_PAST        ;; update past loss
+;  set SUM_SUBSIDY []
+;  set ADJUSTED_SUBSIDY SUBSIDY
+;  ifelse Dynamic_Subsidy?
+;    [ if Dynamic_Subsidy_Trigger = "Free_Rider"
+;      [Update_coefficient_SUBSIDY_PV_Dynamic]
+;    ]
+;  ;if Dynamic_Subsidy? = false
+;  [
+;    Update_coefficient_SUBSIDY_PV
+;  ]
+;
+;  ask turtles
+;  [
+;
+;    Update_values    ;; update values for every agent
+;    Ori_change_color ;; change color if agents original moved in this year
+;    Change_color     ;; change color if agents moved in this year
+;    ;Influence        ;; moved influence by neighbors
+;    subsidy_calculation
+;    set nbpast_move 0
+;    if Dynamic_Subsidy?
+;    [ if Dynamic_Subsidy_Trigger = "Year" or Dynamic_Subsidy_Trigger = "Percentage_Past_Moved"
+;      [Update_coefficient_SUBSIDY_PV_Dynamic_Year_or_Perc]
+;    ]
+;
+;  ]
 
   Update_coefficient_TOTAL       ;; update values and coefficient in each tick
-  ;Update_coefficient_SUBSIDY_PV ;; update subsidy pv value
+  Update_coefficient_SUBSIDY_PV ;; update subsidy pv value
   Update_coefficient_PAST        ;; update past loss
   set SUM_SUBSIDY []
   set ADJUSTED_SUBSIDY SUBSIDY
-  if Dynamic_Subsidy?
-    [ if Dynamic_Subsidy_Trigger = "Free_Rider"
-      [Update_coefficient_SUBSIDY_PV_Dynamic]
-    ]
-  if Dynamic_Subsidy? = false
-  [
-    Update_coefficient_SUBSIDY_PV
-  ]
+;  ifelse Dynamic_Subsidy?
+;    [ if Dynamic_Subsidy_Trigger = "Free_Rider"
+;      [Update_coefficient_SUBSIDY_PV_Dynamic]
+;    ]
+;;  Dynamic_Subsidy? = false
+;  [
+;    Update_coefficient_SUBSIDY_PV
+;  ]
 
   ask turtles
   [
@@ -96,10 +126,10 @@ to Go
     ;Influence        ;; moved influence by neighbors
     subsidy_calculation
     set nbpast_move 0
-    if Dynamic_Subsidy?
-    [ if Dynamic_Subsidy_Trigger = "Year" or Dynamic_Subsidy_Trigger = "Percentage_Past_Moved"
-      [Update_coefficient_SUBSIDY_PV_Dynamic_Year_or_Perc]
-    ]
+;    if Dynamic_Subsidy?
+;    [ if Dynamic_Subsidy_Trigger = "Year" or Dynamic_Subsidy_Trigger = "Percentage_Past_Moved"
+;      [Update_coefficient_SUBSIDY_PV_Dynamic_Year_or_Perc]
+;    ]
 
   ]
 
@@ -276,8 +306,12 @@ create-turtles 3
       set Elevation Flood_Height_10Y + MHHW - 0.15
       set Stories 1
       set Basement ""
+;;      New York ;;;; HOuse_price Cutoff 389001
       set Total_market_value 389000
       set Structure_value 221000
+;;      Norfolk
+;      set Total_market_value 129000    ;;;; HOuse_price Cutoff 129001
+;      set Structure_value 71000
       set Sq.ft. 3615
       set size 25
       set color (5 + floor (Total_market_value / 200000 ) * 10)
@@ -294,8 +328,12 @@ create-turtles 3
       set Elevation Flood_Height_10Y + MHHW - 0.15
       set Stories 1
       set Basement ""
+;;      New York
       set Total_market_value 517000
       set Structure_value 330000
+;;      Norfolk
+;      set Total_market_value 172000
+;      set Structure_value 110000
       set Sq.ft. 4000
       set size 25
       set color (5 + floor (Total_market_value / 200000 ) * 10)
@@ -925,6 +963,7 @@ to Damage_percentage_onestory_nobasement ;our current case
   set Damage_pct_100Y 0
   (ifelse
   Inundation_100Y <= 0 [set Damage_pct_100Y 0]
+  Inundation_100Y <= 6 [set Damage_pct_10Y 0.1835] ;;Testing. Interpolation of 13.4% and 23.3%
   Inundation_100Y <= 12 [set Damage_pct_100Y 0.233]
   Inundation_100Y <= 24 [set Damage_pct_100Y 0.321]
   Inundation_100Y <= 36 [set Damage_pct_100Y 0.401]
@@ -1158,7 +1197,7 @@ CHOOSER
 Flood_type
 Flood_type
 "100_year" "10_year" "Multiple"
-2
+1
 
 SLIDER
 351
@@ -1244,7 +1283,7 @@ Initial_Subsidy
 Initial_Subsidy
 0
 10000000
-139187.0
+0.0
 100
 1
 NIL
@@ -1266,7 +1305,7 @@ INPUTBOX
 162
 400
 Moving_Cost_Multiplier
-1.0
+100.0
 1
 0
 Number
@@ -1564,7 +1603,7 @@ ADJUSTED_SUBSIDY
 ADJUSTED_SUBSIDY
 0
 1000000
-139187.0
+0.0
 1
 1
 NIL
