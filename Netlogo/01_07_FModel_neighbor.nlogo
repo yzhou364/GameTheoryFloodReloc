@@ -121,7 +121,7 @@ to Go
     ]
 
     Influence        ;; moved influence by neighbors
-    set nbpast_move 3 ;; original version: setting nbpast_move 0
+    set nbpast_move 2 ;; original version: setting nbpast_move 0
     ;; This section is for varying subsidies among the studied period
 ;    subsidy_calculation
 ;    if Dynamic_Subsidy?
@@ -232,7 +232,7 @@ to Influence  ;; Not relevant for the base case
   [
     if Moved? = false
     [
-      set nearhouse min-n-of 4 other normals [distance myself] ;; neigbors = n
+      set nearhouse min-n-of 10 other normals [distance myself] ;; neigbors = n
       set move count (nearhouse with [Moved? = true])
       if (nbpast_move < move)      ; to compare the difference of neighbor's influence
       [
@@ -251,7 +251,7 @@ to Influence  ;; Not relevant for the base case
   [
     if Moved? = false
     [
-      set nearhouse min-n-of 4 other poors [distance myself]; set color yellow
+      set nearhouse min-n-of 10 other poors [distance myself]; set color yellow
       set move count (nearhouse with [Moved? = true])
       if (nbpast_move < move)
       [
@@ -1133,7 +1133,7 @@ Government_dis
 Government_dis
 0
 1
-0.025
+0.016
 0.001
 1
 NIL

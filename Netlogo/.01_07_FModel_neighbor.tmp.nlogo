@@ -232,7 +232,7 @@ to Influence  ;; Not relevant for the base case
   [
     if Moved? = false
     [
-      set nearhouse min-n-of 10 other normals [distance myself] ;; neigbors = n
+      set nearhouse min-n-of 7 other normals [distance myself] ;; neigbors = n
       set move count (nearhouse with [Moved? = true])
       if (nbpast_move < move)      ; to compare the difference of neighbor's influence
       [
@@ -251,7 +251,7 @@ to Influence  ;; Not relevant for the base case
   [
     if Moved? = false
     [
-      set nearhouse min-n-of 10 other poors [distance myself]; set color yellow
+      set nearhouse min-n-of 7 other poors [distance myself]; set color yellow
       set move count (nearhouse with [Moved? = true])
       if (nbpast_move < move)
       [
@@ -701,7 +701,7 @@ end
 to Input_100Y_flood_data ;; A 100-year flood probability data
   set PROB_100Y_LIST [ 0 ]
   file-close
-  file-open "data/100_NY_4.5.csv"
+  file-open "data/100_NY_4.5_.csv"
   loop
   [
     ifelse file-at-end? [ stop ]
@@ -1148,7 +1148,7 @@ Initial_Subsidy
 Initial_Subsidy
 0
 10000000
-0.0
+150000.0
 100
 1
 NIL
@@ -1170,7 +1170,7 @@ INPUTBOX
 162
 400
 Moving_Cost_Multiplier
-100.0
+5.0
 1
 0
 Number
@@ -1468,7 +1468,7 @@ ADJUSTED_SUBSIDY
 ADJUSTED_SUBSIDY
 0
 1000000
-0.0
+150000.0
 1
 1
 NIL
