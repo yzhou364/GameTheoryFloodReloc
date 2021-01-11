@@ -1,3 +1,10 @@
+;; NEW COMMENT: Update 01/10/2020
+;; Don't forget to adjust the period (in the Interface) to 80 years
+;; This is the Objective Run version of code with enough adjustment for the neighborhood effect
+;; Neighbor influence function has been included, fixed relocation cost has bee added, new flood probabily files has been adjusted,
+;; relevant flooding information (i.e. damage percentage) has been fixed
+
+
 extensions [csv gis]
 breed [ poors poor ] ;; Set different breed
 breed [ normals normal ]
@@ -77,7 +84,7 @@ to Go
 ;  if TIME > 100 [
 ;    stop
 ;  ]
-  if TIME > 80 [
+  if TIME > 80 [ ;; NEW COMMENT: to account for year 2020-2100
     stop
   ]
 
@@ -89,8 +96,8 @@ to Go
     Update_values   ;; update values for every agent
     Ori_change_color ;; change color if agents original moved in this year
     Change_color ;; change color if agents moved in this year
-    Influence        ;; moved influence by neighbors ;; This section is not studied under the base case
-    set nbpast_move 2
+    Influence         ;; NEW COMMENT: moved influence by neighbors  !! ATTENTION: Comment out this line for no neighborhood effect
+    set nbpast_move 2 ;; NEW COMMENT: This means we are interested in using three neighbors to account for the influence on the resident !! ATTENTION: Comment out this line for no neighborhood effect
   ]
 
   set MOTIVATED count (turtles with [Mot_year != Ori_year])
@@ -99,13 +106,13 @@ to Go
 
 end
 
-to Influence  ;; Not relevant for the base case
-  ;;determine relocated house influenced by their neighbors, must go along with the running years
+to Influence  ;; NEW COMMENT: The neighborhood effect function
+  ;; determine relocated house influenced by their neighbors, must go along with the running years
   if breed = normals
   [
     if Moved? = false
     [
-      set nearhouse min-n-of 5 other normals [distance myself] ;; neigbors = n
+      set nearhouse min-n-of 10 other normals [distance myself] ;; neigbors = n
       set move count (nearhouse with [Moved? = true])
       if (nbpast_move < move)      ; to compare the difference of neighbor's influence
       [
@@ -124,7 +131,7 @@ to Influence  ;; Not relevant for the base case
   [
     if Moved? = false
     [
-      set nearhouse min-n-of 5 other poors [distance myself]; set color yellow
+      set nearhouse min-n-of 10 other poors [distance myself]; set color yellow
       set move count (nearhouse with [Moved? = true])
       if (nbpast_move < move)
       [
@@ -274,7 +281,7 @@ to Update_values ;; Function to update values for agent
   if breed = normals
   [
     if Flood_type = "10_year"[
-    set Future_loss (item 0 TOTAL)  *(Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
+    set Future_loss (item 0 TOTAL)  * (Structure_Value * Damage_pct_10Y + Sq.ft. / 2500 * Cost_to_personal_property_10Y)
     ]
     if Flood_type = "100_year"[
     set Future_loss (item 0 TOTAL) * (Structure_Value * Damage_pct_100Y + Sq.ft. / 2500 * Cost_to_personal_property_100Y)
@@ -300,7 +307,7 @@ end
 to Ori_change_color
   if breed = normals[
     if Government_strategy = "One-time-Subsidy" [
-      if Total_market_value  * Moving_Cost_Multiplier <= Future_loss [
+      if (Total_market_value + 300000) <= Future_loss [
         if Ori_moved? = False [
           set Ori_moved? True
           set Ori_year TIME
@@ -310,7 +317,7 @@ to Ori_change_color
   ]
 
   if breed = poors[
-    if Total_market_value  * Moving_Cost_Multiplier  <= Future_loss [
+    if (Total_market_value + 300000) <= Future_loss [
        if Ori_moved? = False [
           set Ori_moved? True
           set Ori_year TIME
@@ -318,7 +325,7 @@ to Ori_change_color
       ]
     ]
 end
-to Change_color
+to Change_color ;; NEW COMMENT: Moving cost is fixed
   ;; if moving cost plus pv of subsidy is greater than future loss then residents will move
   if breed = normals[
     if Government_strategy = "One-time-Subsidy" [
@@ -369,7 +376,8 @@ to Change_color
 
   ]
 end
-to Input_10Y_flood_data ;; function to plug in flood probability data
+to Input_10Y_flood_data ;; NEW COMMENT: Adjusting flood probability file so that it contains only year 2020-2100
+  ;; function to plug in flood probability data
   ;; initilize PROB_LIST and read probability data from outside source
   set PROB_10Y_LIST [ 0 ]
   file-close
@@ -438,6 +446,9 @@ to Initialize_list ;; function to initialize lists
     set iter iter + 1
   ]
 end
+
+;; NEW COMMENT (Apply to all below functions): Adjusting the functions so they match all the current units (inches)
+
 to Inundation_property_damage_cost
    set Cost_to_personal_property_10Y 0
   (ifelse
@@ -614,11 +625,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1197
-519
+1690
+1020
 -1
 -1
-0.5
+0.99201
 1
 10
 1
@@ -1023,10 +1034,10 @@ NIL
 1
 
 SLIDER
-216
-410
-474
-443
+183
+422
+441
+455
 Neighbor_Influence_Probability
 Neighbor_Influence_Probability
 0
