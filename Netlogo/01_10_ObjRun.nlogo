@@ -44,13 +44,13 @@ turtles-own[
   Damage_pct_100Y
   Moved?
   Mot_year
-  Ori_moved?
   Ori_year
+  normal_inf?
+  poor_inf?
+  Ori_moved?
   nearhouse
   move
   nbpast_move
-  normal_inf?
-  poor_inf?
 ]
 to Clear
   clear-all
@@ -625,11 +625,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1690
-1020
+1097
+419
 -1
 -1
-0.99201
+0.4
 1
 10
 1
@@ -860,7 +860,7 @@ CHOOSER
 Flood_type
 Flood_type
 "100_year" "10_year" "Multiple"
-1
+0
 
 PLOT
 8

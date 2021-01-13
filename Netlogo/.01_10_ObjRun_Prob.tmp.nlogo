@@ -112,7 +112,7 @@ to Influence  ;; NEW COMMENT: The neighborhood effect function
   [
     if Moved? = false
     [
-      set nearhouse min-n-of 10 other normals [distance myself] ;; neigbors = n
+      set nearhouse min-n-of 5 other normals [distance myself] ;; neigbors = n
       set move count (nearhouse with [Moved? = true])
       if (nbpast_move < move)      ; to compare the difference of neighbor's influence
       [
@@ -131,7 +131,7 @@ to Influence  ;; NEW COMMENT: The neighborhood effect function
   [
     if Moved? = false
     [
-      set nearhouse min-n-of 10 other poors [distance myself]; set color yellow
+      set nearhouse min-n-of 5 other poors [distance myself]; set color yellow
       set move count (nearhouse with [Moved? = true])
       if (nbpast_move < move)
       [
@@ -625,11 +625,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1690
-1020
+945
+267
 -1
 -1
-0.4
+0.1
 1
 10
 1
@@ -860,7 +860,7 @@ CHOOSER
 Flood_type
 Flood_type
 "100_year" "10_year" "Multiple"
-0
+1
 
 PLOT
 8
@@ -1042,7 +1042,7 @@ Neighbor_Influence_Probability
 Neighbor_Influence_Probability
 0
 100
-100.0
+50.0
 1
 1
 %

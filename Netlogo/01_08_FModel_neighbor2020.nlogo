@@ -1148,7 +1148,7 @@ Initial_Subsidy
 Initial_Subsidy
 0
 10000000
-150000.0
+0.0
 100
 1
 NIL
@@ -1170,7 +1170,7 @@ INPUTBOX
 162
 400
 Moving_Cost_Multiplier
-5.0
+100.0
 1
 0
 Number
@@ -1468,7 +1468,7 @@ ADJUSTED_SUBSIDY
 ADJUSTED_SUBSIDY
 0
 1000000
-150000.0
+0.0
 1
 1
 NIL
