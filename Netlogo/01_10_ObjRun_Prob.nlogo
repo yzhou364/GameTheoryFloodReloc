@@ -113,7 +113,7 @@ to Influence  ;; NEW COMMENT: The neighborhood effect function
     if Moved? = false
     [
       set nearhouse min-n-of 5 other normals [distance myself] ;; neigbors = n
-      set move count (nearhouse with [Moved? = true])
+      set move count (nearhouse with [Moved? = true])  ; number_of_neigh_moved
       if (nbpast_move < move)      ; to compare the difference of neighbor's influence
       [
         if random-float 100 <= Neighbor_Influence_Probability
@@ -123,7 +123,7 @@ to Influence  ;; NEW COMMENT: The neighborhood effect function
           set normal_inf? true
           set Mot_year TIME
         ]
-        set nbpast_move move
+        ;set nbpast_move move  ;nbpast_move = move move
       ]
     ]
   ]
@@ -142,7 +142,7 @@ to Influence  ;; NEW COMMENT: The neighborhood effect function
           set poor_inf? true
           set Mot_year TIME
         ]
-        set nbpast_move move
+        ;set nbpast_move move
       ]
     ]
   ]
@@ -625,11 +625,11 @@ end
 GRAPHICS-WINDOW
 689
 10
-1193
-515
+796
+118
 -1
 -1
-0.2
+0.01
 1
 10
 1
